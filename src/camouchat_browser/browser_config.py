@@ -8,7 +8,8 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from typing import List, Dict, Optional
 
-from .platform_manager import Platform
+from camouchat_core import Platform
+
 from .browserforge import BrowserForge
 
 
@@ -80,3 +81,21 @@ class BrowserConfig:
             f"fingerprint_obj={self.fingerprint_obj!r}"
             f")"
         )
+
+    def to_dict(self) -> Dict:
+        """
+        Serializes BrowserConfig to a dictionary.
+        """
+        return {
+            "platform": self.platform,
+            "locale": self.locale,
+            "enable_cache": self.enable_cache,
+            "headless": self.headless,
+            "geoip": self.geoip,
+            "proxy": self.proxy,
+            "prefs": self.prefs,
+            "addons": self.addons,
+            "fingerprint": {
+                "provider": "browserforge"
+            }
+        }

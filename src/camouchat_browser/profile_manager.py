@@ -11,12 +11,12 @@ from logging import Logger, LoggerAdapter
 from pathlib import Path
 from typing import List, Optional, Dict, Union
 
-from camouchat.BrowserManager.camoufox_browser import CamoufoxBrowser
-from camouchat.BrowserManager.platform_manager import Platform
-from camouchat.BrowserManager.profile_info import ProfileInfo
-from camouchat.StorageDB.storage_type import StorageType
-from camouchat.camouchat_logger import browser_logger, get_browser_profile_logger
-from camouchat.directory import DirectoryManager
+from camouchat_core import Platform, StorageType, KeyManager
+
+from .camoufox_browser import CamoufoxBrowser
+# Todo , logger fixing
+from .directory import DirectoryManager
+from .profile_info import ProfileInfo
 
 
 class ProfileManager:
@@ -34,18 +34,19 @@ class ProfileManager:
 
     def __init__(self, log: Optional[Union[LoggerAdapter, Logger]] = None) -> None:
         self.directory = DirectoryManager()
-        self.log = log or browser_logger
+        self.log = log
 
-    # ------------------------------------------------------------------
+        # ------------------------------------------------------------------
+
     # Internal helpers
     # ------------------------------------------------------------------
 
     def _generate_metadata(
-        self,
-        platform: Platform,
-        profile_id: str,
-        storage_type: StorageType = StorageType.SQLITE,
-        database_url: Optional[str] = None,
+            self,
+            platform: Platform,
+            profile_id: str,
+            storage_type: StorageType = StorageType.SQLITE,
+            database_url: Optional[str] = None,
     ) -> dict:
         now = datetime.now(timezone.utc).isoformat()
 
@@ -79,7 +80,6 @@ class ProfileManager:
                 "database_file": "messages.db",
                 "media_documents": "media/documents",
             },
-            # Non-secret encryption metadata only.
             # The actual key lives in encryption.key — NOT here.
             "encryption": {
                 "enabled": False,
@@ -125,11 +125,11 @@ class ProfileManager:
     # ------------------------------------------------------------------
 
     def create_profile(
-        self,
-        platform: Platform,
-        profile_id: str,
-        storage_type: StorageType = StorageType.SQLITE,
-        database_url: Optional[str] = None,
+            self,
+            platform: Platform,
+            profile_id: str,
+            storage_type: StorageType = StorageType.SQLITE,
+            database_url: Optional[str] = None,
     ) -> ProfileInfo:
         """Create a new profile; returns the existing one if already present."""
         profile_dir = self.directory.get_profile_dir(platform, profile_id)
@@ -156,7 +156,8 @@ class ProfileManager:
         self._write_metadata(platform, profile_id, metadata)
 
         # Use profile-specific browser logger
-        p_log = get_browser_profile_logger(profile_id)
+        # p_log = get_browser_profile_logger(profile_id)
+        p_log = self.log  # Todo , fix later
         p_log.info(f"Profile created with name [{profile_id}] & stored at [{profile_dir}]")
         return ProfileInfo.from_metadata(metadata, self.directory)
 
@@ -216,7 +217,6 @@ class ProfileManager:
             key = manager.enable_encryption(Platform.WHATSAPP, "my_profile")
             processor = MessageProcessor(..., encryption_key=key)
         """
-        from camouchat.Encryption import KeyManager
 
         metadata = self._read_metadata(platform, profile_id)
 
@@ -264,7 +264,6 @@ class ProfileManager:
             decryptor = MessageDecryptor(key)
             plaintext = decryptor.decrypt_message(nonce_bytes, cipher_bytes)
         """
-        from camouchat.Encryption import KeyManager
 
         metadata = self._read_metadata(platform, profile_id)
 
@@ -385,7 +384,7 @@ class ProfileManager:
         ProfileManager.__dec__()
 
     def activate_profile(
-        self, platform: Platform, profile_id: str, browser_obj: CamoufoxBrowser
+            self, platform: Platform, profile_id: str, browser_obj: CamoufoxBrowser
     ) -> None:
         """
         Activate a profile. Raises if already active with a live PID.
@@ -459,5 +458,7 @@ class ProfileManager:
             raise ValueError(
                 f"Cannot delete active profile '{profile_id}'. Deactivate first or use force=True."
             )
+
+        self.log.info("Deleting profile %s platform : %s", profile_id, platform)
 
         shutil.rmtree(profile_dir)

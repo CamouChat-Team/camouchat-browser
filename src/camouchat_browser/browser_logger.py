@@ -1,8 +1,5 @@
 
+from logging import Logger
 
-
-def get_logger():
-    pass
-
-
-camouchatLogger = get_logger()
+# Todo , fix later with proper profile specific & browser specific logger
+logger  = Logger(__name__)

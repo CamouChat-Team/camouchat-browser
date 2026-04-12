@@ -2,8 +2,7 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Optional, Dict
 
-from camouchat.BrowserManager.platform_manager import Platform
-
+from camouchat_core import Platform
 
 @dataclass
 class ProfileInfo:

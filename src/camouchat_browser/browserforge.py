@@ -18,7 +18,6 @@ from camouchat_core import Platform
 from .profile_info import ProfileInfo
 from .directory import DirectoryManager
 from .exceptions import BrowserException
-from .browser_logger import camouchatLogger
 
 class BrowserForge:
     """

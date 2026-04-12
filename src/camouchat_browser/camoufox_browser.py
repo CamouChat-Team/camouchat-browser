@@ -6,16 +6,14 @@ import os
 from logging import Logger, LoggerAdapter
 from typing import Optional, Dict, Union
 
-import camoufox.exceptions
 from browserforge.fingerprints import Fingerprint
 from camoufox.async_api import AsyncCamoufox, launch_options
 from playwright.async_api import Page, BrowserContext
 
 from .browser_config import BrowserConfig
-from .platform_manager import Platform
 from .profile_info import ProfileInfo
 from .exceptions import BrowserException
-from .camouchat_logger import get_browser_profile_logger
+from .browser_logger import logger
 
 
 class CamoufoxBrowser:
@@ -44,7 +42,7 @@ class CamoufoxBrowser:
             log: Logger instance for audit and error tracking.
         """
         # Use profile-specific browser logger by default
-        log = log or get_browser_profile_logger(profile.profile_id)
+        log = log or logger(profile.profile_id)
         self.log = log
         self.config = config
         self.profile = profile
@@ -130,20 +128,16 @@ class CamoufoxBrowser:
         except Exception as e:
             raise BrowserException("Failed to launch Camoufox browser") from e
 
-    async def get_page(self, platform: Optional[Platform] = None, **kwargs) -> Page:
+    async def get_page(self) -> Page:
         """
         Returns an available blank page if one exists,
         otherwise creates and returns a new page.
         Automatically initializes the browser if needed.
-
-        **kwargs :
-            platform : Platform =  patches page according to the platform given.
         """
         browser = self.browser
         if browser is None:
             browser = await self.get_instance()
 
-        # Reuse an existing blank page if possible
         for p in browser.pages:
             try:
                 if p.url == "about:blank" and not p.is_closed():
@@ -151,7 +145,6 @@ class CamoufoxBrowser:
             except Exception as e:
                 self.log.warning(f"Error checking page state: {e}")
 
-        # Otherwise create a new page
         try:
             page: Page = await browser.new_page()
             return page
