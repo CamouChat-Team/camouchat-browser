@@ -4,6 +4,7 @@ from typing import Optional, Dict
 
 from camouchat_core import Platform
 
+
 @dataclass
 class ProfileInfo:
     """Data class for Profiles"""

@@ -54,10 +54,14 @@ class CamoufoxBrowser:
             raise BrowserException("BrowserForge is missing from the browser instance.")
 
         if self.profile.cache_dir is None:
-            raise BrowserException("Cache dir path is missing from the browser instance.")
+            raise BrowserException(
+                "Cache dir path is missing from the browser instance."
+            )
 
         if self.profile.fingerprint_path is None:
-            raise BrowserException("Fingerprint path is missing from the browser instance.")
+            raise BrowserException(
+                "Fingerprint path is missing from the browser instance."
+            )
 
         if not self.config.headless:
             self.log.info(

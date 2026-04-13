@@ -6,19 +6,20 @@ that match the system's actual screen dimensions.
 """
 
 import json
-from logging import Logger, LoggerAdapter
 import os
 import pickle
+from logging import Logger, LoggerAdapter
 from pathlib import Path
-from typing import Tuple, Optional, Union
+from typing import Optional, Tuple, Union
 
 from browserforge.fingerprints import Fingerprint, FingerprintGenerator
-
 from camouchat_core import Platform
-from .profile_info import ProfileInfo
+
+from .browser_logger import logger
 from .directory import DirectoryManager
 from .exceptions import BrowserException
-from .browser_logger import logger
+from .profile_info import ProfileInfo
+
 
 class BrowserForge:
     """
@@ -42,7 +43,6 @@ class BrowserForge:
         """
         fingerprint_path: Path = profile.fingerprint_path
         if fingerprint_path.exists():
-
             if os.stat(fingerprint_path).st_size > 0:
                 with open(fingerprint_path, "rb") as fh:
                     fg = pickle.load(fh)
@@ -105,7 +105,10 @@ class BrowserForge:
             w, h = fg.screen.width, fg.screen.height
             attempt += 1
 
-            if abs(w - real_w) / real_w < tolerance and abs(h - real_h) / real_h < tolerance:
+            if (
+                abs(w - real_w) / real_w < tolerance
+                and abs(h - real_h) / real_h < tolerance
+            ):
                 if fg in avoid:
                     if self.log:
                         self.log.warning(
@@ -125,7 +128,9 @@ class BrowserForge:
 
             if attempt >= 10:
                 if self.log:
-                    self.log.warning("⚠️ Using last generated fingerprint after 10 attempts")
+                    self.log.warning(
+                        "⚠️ Using last generated fingerprint after 10 attempts"
+                    )
                 break
 
         return fg
@@ -161,7 +166,9 @@ class BrowserForge:
             try:
                 import subprocess
 
-                out = subprocess.check_output(["xdpyinfo"], stderr=subprocess.DEVNULL).decode()
+                out = subprocess.check_output(
+                    ["xdpyinfo"], stderr=subprocess.DEVNULL
+                ).decode()
 
                 for line in out.splitlines():
                     if "dimensions:" in line:
@@ -176,7 +183,7 @@ class BrowserForge:
         # ---------------- macOS ----------------
         elif system == "Darwin":
             try:
-                import Quartz
+                import Quartz  # type: ignore[import-not-found]
             except ImportError as e:
                 raise BrowserException("Quartz not available on macOS") from e
 
@@ -188,7 +195,9 @@ class BrowserForge:
 
         # ---------------- Unsupported OS ----------------
         else:
-            raise BrowserException(f"Unsupported OS for screen size detection: {system}")
+            raise BrowserException(
+                f"Unsupported OS for screen size detection: {system}"
+            )
 
     @staticmethod
     def get_fingerprint_as_dict(profile: ProfileInfo) -> dict:
@@ -224,4 +233,4 @@ class BrowserForge:
             raise BrowserException(f"Failed to load fingerprint JSON: {e}")
 
     def __repr__(self):
-        return f"BrowserForge(" f"log={type(self.log).__name__}" f")"
+        return f"BrowserForge(log={type(self.log).__name__})"

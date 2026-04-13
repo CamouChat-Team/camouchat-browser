@@ -15,6 +15,7 @@ from camouchat_core import Platform, StorageType, KeyManager
 
 from .browser_logger import logger
 from .camoufox_browser import CamoufoxBrowser
+
 # Todo , logger fixing
 from .directory import DirectoryManager
 from .profile_info import ProfileInfo
@@ -43,11 +44,11 @@ class ProfileManager:
     # ------------------------------------------------------------------
 
     def _generate_metadata(
-            self,
-            platform: Platform,
-            profile_id: str,
-            storage_type: StorageType = StorageType.SQLITE,
-            database_url: Optional[str] = None,
+        self,
+        platform: Platform,
+        profile_id: str,
+        storage_type: StorageType = StorageType.SQLITE,
+        database_url: Optional[str] = None,
     ) -> dict:
         now = datetime.now(timezone.utc).isoformat()
 
@@ -71,7 +72,9 @@ class ProfileManager:
                 "url": database_url,
             },
             "paths": {
-                "profile_dir": str(self.directory.get_profile_dir(platform, profile_id)),
+                "profile_dir": str(
+                    self.directory.get_profile_dir(platform, profile_id)
+                ),
                 "fingerprint_file": "fingerprint.pkl",
                 "cache_dir": "cache",
                 "media_dir": "media",
@@ -99,7 +102,9 @@ class ProfileManager:
         profile_dir = self.directory.get_profile_dir(platform, profile_id)
         metadata_file = profile_dir / "metadata.json"
         if not metadata_file.exists():
-            raise ValueError(f"Profile metadata not found for '{profile_id}' on '{platform}'.")
+            raise ValueError(
+                f"Profile metadata not found for '{profile_id}' on '{platform}'."
+            )
         with open(metadata_file) as f:
             return json.load(f)
 
@@ -126,11 +131,11 @@ class ProfileManager:
     # ------------------------------------------------------------------
 
     def create_profile(
-            self,
-            platform: Platform,
-            profile_id: str,
-            storage_type: StorageType = StorageType.SQLITE,
-            database_url: Optional[str] = None,
+        self,
+        platform: Platform,
+        profile_id: str,
+        storage_type: StorageType = StorageType.SQLITE,
+        database_url: Optional[str] = None,
     ) -> ProfileInfo:
         """
         Create a new profile; returns the existing one if already present.
@@ -169,7 +174,7 @@ class ProfileManager:
 
         # Use profile-specific browser logger
         # p_log = get_browser_profile_logger(profile_id)
-        p_log = self.log  # Todo , fix later
+        # p_log = self.log  # Todo , fix later
         # p_log.info(f"Profile created with name [{profile_id}] & stored at [{profile_dir}]")
         return ProfileInfo.from_metadata(metadata, self.directory)
 
@@ -186,7 +191,9 @@ class ProfileManager:
         profile_path = platform_dir / profile_id
         return profile_path.exists() and profile_path.is_dir()
 
-    def list_profiles(self, platform: Optional[Platform] = None) -> Dict[str, List[str]]:
+    def list_profiles(
+        self, platform: Optional[Platform] = None
+    ) -> Dict[str, List[str]]:
         """
         List profiles.
 
@@ -198,7 +205,9 @@ class ProfileManager:
         if platform:
             platform_dir = self.directory.get_platform_dir(platform)
             if platform_dir.exists():
-                results[platform] = [p.name for p in platform_dir.iterdir() if p.is_dir()]
+                results[platform] = [
+                    p.name for p in platform_dir.iterdir() if p.is_dir()
+                ]
         else:
             for plat in self.directory.platforms_dir.iterdir():
                 if plat.is_dir():
@@ -349,7 +358,9 @@ class ProfileManager:
         else:
             return True
 
-    async def close_profile(self, platform: Platform, profile_id: str, force: bool = False) -> None:
+    async def close_profile(
+        self, platform: Platform, profile_id: str, force: bool = False
+    ) -> None:
         """closes the profile
         :param platform: Platform object
         :param profile_id: Profile ID
@@ -396,7 +407,7 @@ class ProfileManager:
         ProfileManager.__dec__()
 
     def activate_profile(
-            self, platform: Platform, profile_id: str, browser_obj: CamoufoxBrowser
+        self, platform: Platform, profile_id: str, browser_obj: CamoufoxBrowser
     ) -> None:
         """
         Activate a profile. Raises if already active with a live PID.
@@ -405,7 +416,9 @@ class ProfileManager:
         profile_dir = self.directory.get_profile_dir(platform, profile_id)
 
         if not profile_dir.exists():
-            raise ValueError(f"Profile '{profile_id}' does not exist for platform '{platform}'.")
+            raise ValueError(
+                f"Profile '{profile_id}' does not exist for platform '{platform}'."
+            )
 
         metadata_file = profile_dir / "metadata.json"
 
@@ -444,7 +457,9 @@ class ProfileManager:
 
         lock_file.write_text(str(os.getpid()))
 
-    def delete_profile(self, platform: Platform, profile_id: str, force: bool = False) -> None:
+    def delete_profile(
+        self, platform: Platform, profile_id: str, force: bool = False
+    ) -> None:
         """
         Completely delete a profile from the saved disk.
         To delete & remove access on your phone follow :
@@ -459,7 +474,9 @@ class ProfileManager:
         profile_dir = self.directory.get_profile_dir(platform, profile_id)
 
         if not profile_dir.exists():
-            raise ValueError(f"Profile '{profile_id}' does not exist for platform '{platform}'.")
+            raise ValueError(
+                f"Profile '{profile_id}' does not exist for platform '{platform}'."
+            )
 
         metadata_file = profile_dir / "metadata.json"
 

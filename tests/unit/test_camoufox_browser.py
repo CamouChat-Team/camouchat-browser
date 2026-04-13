@@ -115,6 +115,7 @@ def test_init_missing_logger(mock_browser_config, mock_profile_info):
         log=None,
     )
     from camouchat_browser.browser_logger import logger
+
     assert browser.log == logger
 
 
@@ -122,7 +123,9 @@ def test_init_missing_browserforge(mock_browser_config, mock_profile_info, mock_
     """Test CamoufoxBrowser raises error without BrowserForge."""
     mock_browser_config.fingerprint_obj = None
     with pytest.raises(BrowserException, match="BrowserForge is missing"):
-        CamoufoxBrowser(config=mock_browser_config, profile=mock_profile_info, log=mock_logger)
+        CamoufoxBrowser(
+            config=mock_browser_config, profile=mock_profile_info, log=mock_logger
+        )
 
 
 def test_init_missing_cache_dir(mock_browser_config, mock_profile_info, mock_logger):
@@ -136,7 +139,9 @@ def test_init_missing_cache_dir(mock_browser_config, mock_profile_info, mock_log
         )
 
 
-def test_init_missing_fingerprint_path(mock_browser_config, mock_profile_info, mock_logger):
+def test_init_missing_fingerprint_path(
+    mock_browser_config, mock_profile_info, mock_logger
+):
     """Test CamoufoxBrowser raises error without fingerprint path."""
     mock_profile_info.fingerprint_path = None
     with pytest.raises(BrowserException, match="Fingerprint path is missing"):
@@ -166,7 +171,9 @@ async def test_getInstance_creates_browser(camoufox_browser, mock_browserforge):
     with patch(
         "camouchat_browser.camoufox_browser.AsyncCamoufox", return_value=mock_camoufox
     ):
-        with patch("camouchat_browser.camoufox_browser.launch_options", return_value={}):
+        with patch(
+            "camouchat_browser.camoufox_browser.launch_options", return_value={}
+        ):
             result = await camoufox_browser.get_instance()
 
             assert result == mock_context
@@ -204,7 +211,9 @@ async def test_GetBrowser_success(camoufox_browser, mock_browserforge):
     with patch(
         "camouchat_browser.camoufox_browser.AsyncCamoufox", return_value=mock_camoufox
     ):
-        with patch("camouchat_browser.camoufox_browser.launch_options", return_value={}):
+        with patch(
+            "camouchat_browser.camoufox_browser.launch_options", return_value={}
+        ):
             result = await camoufox_browser.__GetBrowser__()
 
             assert result == mock_context
@@ -212,7 +221,9 @@ async def test_GetBrowser_success(camoufox_browser, mock_browserforge):
 
 
 @pytest.mark.asyncio
-async def test_GetBrowser_retries_on_invalid_ip(camoufox_browser, mock_browserforge, mock_logger):
+async def test_GetBrowser_retries_on_invalid_ip(
+    camoufox_browser, mock_browserforge, mock_logger
+):
     """Test __GetBrowser__ retries on Camoufox InvalidIP error."""
     mock_context = AsyncMock(spec=BrowserContext)
     mock_fingerprint = Mock()
@@ -236,7 +247,9 @@ async def test_GetBrowser_retries_on_invalid_ip(camoufox_browser, mock_browserfo
     with patch(
         "camouchat_browser.camoufox_browser.AsyncCamoufox", return_value=mock_camoufox
     ):
-        with patch("camouchat_browser.camoufox_browser.launch_options", return_value={}):
+        with patch(
+            "camouchat_browser.camoufox_browser.launch_options", return_value={}
+        ):
             result = await camoufox_browser.__GetBrowser__()
 
             assert result == mock_context
@@ -260,7 +273,9 @@ async def test_GetBrowser_max_retries(camoufox_browser, mock_browserforge):
     with patch(
         "camouchat_browser.camoufox_browser.AsyncCamoufox", return_value=mock_camoufox
     ):
-        with patch("camouchat_browser.camoufox_browser.launch_options", return_value={}):
+        with patch(
+            "camouchat_browser.camoufox_browser.launch_options", return_value={}
+        ):
             with pytest.raises(BrowserException, match="Max Camoufox IP retry"):
                 await camoufox_browser.__GetBrowser__(tries=5)
 
@@ -274,7 +289,9 @@ async def test_GetBrowser_other_exception(camoufox_browser, mock_browserforge):
         "camouchat_browser.camoufox_browser.AsyncCamoufox",
         side_effect=Exception("Unknown error"),
     ):
-        with patch("camouchat_browser.camoufox_browser.launch_options", return_value={}):
+        with patch(
+            "camouchat_browser.camoufox_browser.launch_options", return_value={}
+        ):
             with pytest.raises(BrowserException, match="Failed to launch Camoufox"):
                 await camoufox_browser.__GetBrowser__()
 

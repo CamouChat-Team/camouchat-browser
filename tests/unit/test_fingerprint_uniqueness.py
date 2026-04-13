@@ -88,7 +88,9 @@ def test_get_fg_integration(browserforge, tmp_path):
     existing_fg = Mock(spec=Fingerprint)
     new_fg = Mock(spec=Fingerprint)
 
-    with patch.object(browserforge, "_get_all_existing_fingerprints", return_value=[existing_fg]):
+    with patch.object(
+        browserforge, "_get_all_existing_fingerprints", return_value=[existing_fg]
+    ):
         with patch.object(browserforge, "__gen_fg__", return_value=new_fg) as mock_gen:
             with patch("pickle.dump"):
                 result = browserforge.get_fg(mock_profile)

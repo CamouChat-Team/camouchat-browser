@@ -95,7 +95,5 @@ class BrowserConfig:
             "proxy": self.proxy,
             "prefs": self.prefs,
             "addons": self.addons,
-            "fingerprint": {
-                "provider": "browserforge"
-            }
+            "fingerprint": {"provider": "browserforge"},
         }

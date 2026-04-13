@@ -1,6 +1,7 @@
 """
 Clean Public API for all the class this plugin provides.
 """
+
 from .browser_config import BrowserConfig
 from .browserforge import BrowserForge
 from .camoufox_browser import CamoufoxBrowser
@@ -18,5 +19,5 @@ __all__ = [
     "ProfileInfo",
     "ProfileManager",
     "CamoufoxBrowser",
-    "BrowserException"
+    "BrowserException",
 ]

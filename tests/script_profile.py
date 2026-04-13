@@ -1,12 +1,14 @@
 """
 Test ProfileManager.
 """
+
 import asyncio
 
 from camouchat_core import Platform
 
 from camouchat_browser import ProfileManager
 from camouchat_browser.browser_logger import get_logger
+from camouchat_browser import BrowserConfig, BrowserForge, CamoufoxBrowser
 
 logger = get_logger(__name__)
 # ── Profile  ─────────────────────────────────────────────────────────────
@@ -15,7 +17,6 @@ work = pm.create_profile(platform=Platform.WHATSAPP, profile_id="work")
 # StorageType default used = SQLITE , database_url kept default.
 
 # ── Browser ─────────────────────────────────────────────────────────────
-from camouchat_browser import BrowserConfig, BrowserForge, CamoufoxBrowser
 
 browser_forge = BrowserForge(log=logger)
 config = BrowserConfig.from_dict(

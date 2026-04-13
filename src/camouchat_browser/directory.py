@@ -1,7 +1,9 @@
 from pathlib import Path
 
 from platformdirs import PlatformDirs
+
 # Todo , add Directory based logs
+
 
 class DirectoryManager:
     """Manages application-wide and profile-specific directory structures."""
