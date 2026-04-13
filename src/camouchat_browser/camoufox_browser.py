@@ -42,8 +42,8 @@ class CamoufoxBrowser:
             log: Logger instance for audit and error tracking.
         """
         # Use profile-specific browser logger by default
-        log = log or logger(profile.profile_id)
-        self.log = log
+        # log = log or logger(profile.profile_id)
+        self.log = log or logger
         self.config = config
         self.profile = profile
         self.BrowserForge = config.fingerprint_obj

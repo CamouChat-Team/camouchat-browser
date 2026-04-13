@@ -13,6 +13,7 @@ from typing import List, Optional, Dict, Union
 
 from camouchat_core import Platform, StorageType, KeyManager
 
+from .browser_logger import logger
 from .camoufox_browser import CamoufoxBrowser
 # Todo , logger fixing
 from .directory import DirectoryManager
@@ -34,7 +35,7 @@ class ProfileManager:
 
     def __init__(self, log: Optional[Union[LoggerAdapter, Logger]] = None) -> None:
         self.directory = DirectoryManager()
-        self.log = log
+        self.log = log or logger  # Temp set.
 
         # ------------------------------------------------------------------
 
@@ -131,7 +132,18 @@ class ProfileManager:
             storage_type: StorageType = StorageType.SQLITE,
             database_url: Optional[str] = None,
     ) -> ProfileInfo:
-        """Create a new profile; returns the existing one if already present."""
+        """
+        Create a new profile; returns the existing one if already present.
+
+        args :
+        -platform : Platform must use from camouchat-core
+        -profile_id : id/name of the profile to create
+        -storage_type : type of storage must use from camouchat-core's StorageType , Default set to SQLITE
+        -database_url : specific path to set url
+                        Recommended to keep it default set , as it uses internally correct path to use according to Profile creation.
+
+        :return - ProfileInfo object
+        """
         profile_dir = self.directory.get_profile_dir(platform, profile_id)
 
         if profile_dir.exists():
@@ -158,7 +170,7 @@ class ProfileManager:
         # Use profile-specific browser logger
         # p_log = get_browser_profile_logger(profile_id)
         p_log = self.log  # Todo , fix later
-        p_log.info(f"Profile created with name [{profile_id}] & stored at [{profile_dir}]")
+        # p_log.info(f"Profile created with name [{profile_id}] & stored at [{profile_dir}]")
         return ProfileInfo.from_metadata(metadata, self.directory)
 
     def get_profile(self, platform: Platform, profile_id: str) -> ProfileInfo:

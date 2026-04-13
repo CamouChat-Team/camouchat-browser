@@ -18,6 +18,7 @@ from camouchat_core import Platform
 from .profile_info import ProfileInfo
 from .directory import DirectoryManager
 from .exceptions import BrowserException
+from .browser_logger import logger
 
 class BrowserForge:
     """
@@ -30,11 +31,7 @@ class BrowserForge:
     log: Union[Logger, LoggerAdapter]
 
     def __init__(self, log: Optional[Union[Logger, LoggerAdapter]] = None) -> None:
-        if log is None:
-
-            self.log = camouchatLogger
-        else:
-            self.log = log
+        self.log = log or logger
 
     def get_fg(self, profile: ProfileInfo) -> Fingerprint:
         """
