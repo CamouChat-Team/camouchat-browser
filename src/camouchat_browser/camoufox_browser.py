@@ -7,6 +7,7 @@ from logging import Logger, LoggerAdapter
 from typing import Optional, Dict, Union
 
 from browserforge.fingerprints import Fingerprint
+import camoufox
 from camoufox.async_api import AsyncCamoufox, launch_options
 from playwright.async_api import Page, BrowserContext
 
