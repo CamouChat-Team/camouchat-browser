@@ -2,7 +2,6 @@
 Unit tests for fingerprint uniqueness in BrowserForge.
 """
 
-from pathlib import Path
 from unittest.mock import Mock, patch
 import pytest
 from browserforge.fingerprints import Fingerprint
