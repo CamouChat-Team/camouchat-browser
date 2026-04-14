@@ -14,7 +14,7 @@ from playwright.async_api import Page, BrowserContext
 from .browser_config import BrowserConfig
 from .profile_info import ProfileInfo
 from .exceptions import BrowserException
-from .browser_logger import logger
+from .browser_logger import get_profile_browser_logger
 
 
 class CamoufoxBrowser:
@@ -43,8 +43,9 @@ class CamoufoxBrowser:
             log: Logger instance for audit and error tracking.
         """
         # Use profile-specific browser logger by default
-        # log = log or logger(profile.profile_id)
-        self.log = log or logger
+        self.log = log or get_profile_browser_logger(
+            name="CamoufoxBrowser", profile_id=profile.profile_id
+        )
         self.config = config
         self.profile = profile
         self.BrowserForge = config.fingerprint_obj

@@ -1,16 +1,13 @@
-import logging
+from typing import Optional, Union
+from camouchat_core import LoggerFactory
 
+def get_profile_browser_logger(
+    name: str, profile_id: str = "GLOBAL", level: Optional[Union[int, str]] = None
+):
+    """Returns a logger specialized for browser operations with profile context."""
+    return LoggerFactory.get_logger(
+        name=name, platform="BROWSER", profile_id=profile_id, level=level
+    )
 
-# Todo , fix later with proper profile specific & browser specific logger
-def get_logger(name: str):
-    logger = logging.getLogger(name)
-    if not logger.handlers:
-        handler = logging.StreamHandler()
-        formatter = logging.Formatter("[%(levelname)s] %(name)s: %(message)s")
-        handler.setFormatter(formatter)
-        logger.addHandler(handler)
-        logger.setLevel(logging.DEBUG)
-    return logger
-
-
-logger = get_logger(__name__)
+# Default logger for the module
+logger = get_profile_browser_logger("browser_init")

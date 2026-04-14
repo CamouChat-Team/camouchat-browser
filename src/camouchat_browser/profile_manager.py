@@ -13,7 +13,7 @@ from typing import List, Optional, Dict, Union
 
 from camouchat_core import Platform, StorageType, KeyManager
 
-from .browser_logger import logger
+from .browser_logger import logger, get_profile_browser_logger
 from .camoufox_browser import CamoufoxBrowser
 
 # Todo , logger fixing
@@ -36,7 +36,7 @@ class ProfileManager:
 
     def __init__(self, log: Optional[Union[LoggerAdapter, Logger]] = None) -> None:
         self.directory = DirectoryManager()
-        self.log = log or logger  # Temp set.
+        self.log = log or logger
 
         # ------------------------------------------------------------------
 
@@ -173,9 +173,10 @@ class ProfileManager:
         self._write_metadata(platform, profile_id, metadata)
 
         # Use profile-specific browser logger
-        # p_log = get_browser_profile_logger(profile_id)
-        # p_log = self.log  # Todo , fix later
-        # p_log.info(f"Profile created with name [{profile_id}] & stored at [{profile_dir}]")
+        p_log = get_profile_browser_logger(name="ProfileManager", profile_id=profile_id)
+        p_log.info(
+            f"Profile created with name [{profile_id}] & stored at [{profile_dir}]"
+        )
         return ProfileInfo.from_metadata(metadata, self.directory)
 
     def get_profile(self, platform: Platform, profile_id: str) -> ProfileInfo:
