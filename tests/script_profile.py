@@ -7,10 +7,10 @@ import asyncio
 from camouchat_core import Platform
 
 from camouchat_browser import ProfileManager
-from camouchat_browser.browser_logger import get_logger
+from camouchat_browser.browser_logger import get_profile_browser_logger
 from camouchat_browser import BrowserConfig, BrowserForge, CamoufoxBrowser
 
-logger = get_logger(__name__)
+logger = get_profile_browser_logger(name=__name__, profile_id="test_script")
 # ── Profile  ─────────────────────────────────────────────────────────────
 pm = ProfileManager()
 work = pm.create_profile(platform=Platform.WHATSAPP, profile_id="work")

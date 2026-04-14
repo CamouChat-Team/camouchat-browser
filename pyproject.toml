@@ -1,12 +1,37 @@
 [project]
 name = "camouchat-browser"
-version = "0.1.0"
-description = "Add your description here"
+version = "0.7.0"
+description = "Plugin for CamouChat providing anti-detection browser management via Camoufox and Playwright."
 readme = "README.md"
 authors = [
     { name = "BITS-Rohit", email = "rohitguptaradheradhe123@gmail.com" }
 ]
+maintainers = [
+    { name = "BITS-Rohit", email = "rohitguptaradheradhe123@gmail.com" }
+]
 requires-python = ">=3.14"
+license = "MIT"
+keywords = [
+    "browser-automation",
+    "stealth",
+    "camoufox",
+    "playwright",
+    "anti-detection",
+    "fingerprinting",
+    "browserforge"
+]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Developers",
+    "Topic :: Internet :: WWW/HTTP :: Browsers",
+    "Topic :: Software Development :: Libraries :: Python Modules",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.14",
+    "Framework :: AsyncIO",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+    "Natural Language :: English",
+]
 dependencies = [
     "browserforge>=1.2.4",
     "camouchat-core",
@@ -16,6 +41,12 @@ dependencies = [
     "pyobjc-framework-Quartz; sys_platform == 'darwin'",
 ]
 
+[project.urls]
+Homepage = "https://github.com/CamouChat-Team"
+Repository = "https://github.com/CamouChat-Team/camouchat-browser"
+"Bug Tracker" = "https://github.com/CamouChat-Team/camouchat-browser/issues"
+Changelog = "https://github.com/CamouChat-Team/camouchat-browser/releases"
+
 [tool.deptry]
 package_module_name_map = { "pyobjc-framework-Quartz" = "Quartz" }
 per_rule_ignores = { DEP002 = "pyobjc-framework-Quartz" }
@@ -23,9 +54,8 @@ per_rule_ignores = { DEP002 = "pyobjc-framework-Quartz" }
 [build-system]
 requires = ["uv_build>=0.10.7,<0.11.0"]
 build-backend = "uv_build"
-
 [tool.uv.sources]
-camouchat-core = { path = "../camouchat-core", editable = true }
+camouchat-core = { workspace = true }
 
 [dependency-groups]
 dev = [
