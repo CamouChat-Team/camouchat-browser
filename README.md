@@ -50,6 +50,10 @@ await page.goto("https://check.camoufox.com")
 - [Profile Management](https://github.com/CamouChat-Team/camouchat-browser/blob/main/docs/profiles.md) - Managing sandboxes and encryption.
 - [Fingerprinting](https://github.com/CamouChat-Team/camouchat-browser/blob/main/docs/BrowserForge.md) - hardware-level spoofing logic.
 
+## Roadmap
+
+- 🐳 **Docker Containerization**: Full headless Docker image with Xvfb, Camoufox binaries, and proxy-routing pre-configured out of the box (Targeting v0.8.0).
+
 ## Disclaimer
 
 This package provides browser automation infrastructure. Use responsibly and in compliance with the terms of service of any platform you automate. No guarantee of undetectability is provided.
