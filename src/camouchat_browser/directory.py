@@ -6,7 +6,12 @@ from platformdirs import PlatformDirs
 
 
 class DirectoryManager:
-    """Manages application-wide and profile-specific directory structures."""
+    """
+    Orchestrates application data and profile directory structures.
+
+    Resolves OS-specific paths for root, cache, and platform directories,
+    ensuring consistent storage across Linux, macOS, and Windows.
+    """
 
     def __init__(self):
         """Initialize DirectoryManager with an application name."""

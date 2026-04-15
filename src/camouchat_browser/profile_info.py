@@ -7,7 +7,12 @@ from camouchat_core import Platform
 
 @dataclass
 class ProfileInfo:
-    """Data class for Profiles"""
+    """
+    Metadata container for a CamouChat profile.
+
+    Stores paths, encryption status, and activity state for a specific
+    platform user sandbox.
+    """
 
     profile_id: str
     platform: Platform

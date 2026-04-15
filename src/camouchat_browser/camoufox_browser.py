@@ -19,10 +19,17 @@ from .browser_logger import get_profile_browser_logger
 
 class CamoufoxBrowser:
     """
-    Camoufox browser implementation with fingerprint support.
+    Orchestrates Camoufox browser instances with integrated fingerprinting.
 
-    Handles browser lifecycle, fingerprint loading, and retry logic for IP issues.
-    Uses dependency injection for logging and fingerprint generation.
+    This class manages the lifecycle of [Camoufox](https://camoufox.com/) contexts,
+    handling session isolation, hardware fingerprint spoofing via BrowserForge,
+    and automated retry logic for IP-related failures.
+
+    Supported Features:
+    - Persistent context management
+    - Real-time fingerprint injection
+    - GeoIP and Proxy transparency
+    - Page recycling and resource optimization
     """
 
     # handles Multiple Profiles to multi browser context handling

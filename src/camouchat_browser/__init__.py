@@ -1,5 +1,9 @@
 """
-Clean Public API for all the class this plugin provides.
+CamouChat Browser Plugin.
+
+This package provides high-performance, stealth-oriented browser management
+for the CamouChat ecosystem, leveraging Camoufox and BrowserForge for
+advanced anti-detection and session isolation.
 """
 
 from .browser_config import BrowserConfig

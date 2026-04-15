@@ -1,8 +1,9 @@
 """
-Fingerprint generation and management for BrowserForge.
+BrowserForge fingerprint management module.
 
-Handles creating, loading, and persisting browser fingerprints
-that match the system's actual screen dimensions.
+This module provides hardware-level fingerprinting capabilities using the
+browserforge library, ensuring consistent and stealthy browser identities
+that match the host's actual display dimensions.
 """
 
 import json
@@ -23,10 +24,11 @@ from .profile_info import ProfileInfo
 
 class BrowserForge:
     """
-    BrowserForge fingerprint manager.
+    Manages browser fingerprint generation and persistence.
 
-    Generates fingerprints that match system screen size to avoid detection.
-    Reuses existing fingerprints from disk when available.
+    Uses the browserforge library to create authentic hardware/software signatures.
+    Fingerprints are tied to ProfileInfo objects to ensure identity consistency
+    across multiple sessions and avoid detection by screen-size mismatch.
     """
 
     log: Union[Logger, LoggerAdapter]

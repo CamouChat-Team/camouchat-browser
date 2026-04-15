@@ -1,4 +1,9 @@
-"""Profile manager"""
+"""
+Profile lifecycle and encryption management.
+
+This module coordinates the creation, activation, and deletion of browser
+profiles, ensuring session isolation and secure storage of encryption keys.
+"""
 
 from __future__ import annotations
 
@@ -16,20 +21,19 @@ from camouchat_core import Platform, StorageType, KeyManager
 from .browser_logger import logger, get_profile_browser_logger
 from .camoufox_browser import CamoufoxBrowser
 
-# Todo , logger fixing
 from .directory import DirectoryManager
 from .profile_info import ProfileInfo
 
 
 class ProfileManager:
-    """Manager / entry point for profile creation, activation, and key management.
+    """
+    Orchestrates the lifecycle and security of browser profiles.
 
-    Each profile is a sandboxed directory containing:
-    - metadata.json   : profile config & encryption metadata (no raw key)
-    - encryption.key  : base64-encoded AES-256 key (only present when encryption enabled)
-    - messages.db     : SQLAlchemy database
-    - fingerprint.pkl : browser fingerprint
-    - cache/, media/  : auxiliary profile data
+    Each profile represents a unique execution environment with isolated:
+    - Metadata: Configuration and state tracking.
+    - Encryption: AES-256 keys for secure database storage.
+    - Session Data: Cookies, cache, and local storage via Camoufox.
+    - Identity: Hardware fingerprints via BrowserForge.
     """
 
     p_count: int = 0
