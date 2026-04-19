@@ -14,13 +14,12 @@ import signal
 from datetime import datetime, timezone
 from logging import Logger, LoggerAdapter
 from pathlib import Path
-from typing import List, Optional, Dict, Union, Any
+from typing import Any, Dict, List, Optional, Union
 
-from camouchat_core import Platform, KeyManager
+from camouchat_core import KeyManager, Platform
 
-from .browser_logger import logger, get_profile_browser_logger
+from .browser_logger import get_profile_browser_logger, logger
 from .camoufox_browser import CamoufoxBrowser
-
 from .directory import DirectoryManager
 from .profile_info import ProfileInfo
 
@@ -47,10 +46,7 @@ class ProfileManager:
     # ------------------------------------------------------------------
 
     def _generate_metadata(
-        self,
-        platform: Platform,
-        profile_id: str,
-        db_credentials : Dict[str , Any] = {}
+        self, platform: Platform, profile_id: str, db_credentials: Dict[str, Any] = {}
     ) -> Dict[str, Any]:
         """
         Generates metadata for a new profile.
@@ -66,21 +62,28 @@ class ProfileManager:
         now = datetime.now(timezone.utc).isoformat()
 
         profile_dir = self.directory.get_profile_dir(platform, profile_id)
-        fingerprint_file_path = self.directory.get_fingerprint_file_path(platform, profile_id)
+        fingerprint_file_path = self.directory.get_fingerprint_file_path(
+            platform, profile_id
+        )
         cache_dir = self.directory.get_cache_dir(platform, profile_id)
         media_dir = self.directory.get_media_dir(platform, profile_id)
         media_images_dir = self.directory.get_media_images_dir(platform, profile_id)
         media_videos_dir = self.directory.get_media_videos_dir(platform, profile_id)
         media_voice_dir = self.directory.get_media_voice_dir(platform, profile_id)
-        media_documents_dir = self.directory.get_media_documents_dir(platform, profile_id)
+        media_documents_dir = self.directory.get_media_documents_dir(
+            platform, profile_id
+        )
         key_file_path = self.directory.get_key_file_path(platform, profile_id)
 
-        encryption : Dict[str, Any] = {
+        encryption: Dict[str, Any] = {
             "enabled": False,
             "algorithm": "AES-256-GCM",
             "key_file": str(key_file_path),
-            "created_at": None, 
+            "created_at": None,
         }
+        self.log.debug(
+            f"Generated metadata for profile [{profile_id}] on platform [{platform}]"
+        )
 
         return {
             "profile_id": profile_id,
@@ -117,7 +120,9 @@ class ProfileManager:
         with open(metadata_file) as f:
             return json.load(f)
 
-    def _write_metadata(self, platform: Platform, profile_id: str, data: Dict[str, Any]) -> None:
+    def _write_metadata(
+        self, platform: Platform, profile_id: str, data: Dict[str, Any]
+    ) -> None:
         profile_dir = self.directory.get_profile_dir(platform, profile_id)
         with open(profile_dir / "metadata.json", "w") as f:
             json.dump(data, f, indent=4)
@@ -140,10 +145,7 @@ class ProfileManager:
     # ------------------------------------------------------------------
 
     def create_profile(
-        self,
-        platform: Platform,
-        profile_id: str,
-        db_credentials : Dict[str , Any] = {}
+        self, platform: Platform, profile_id: str, db_credentials: Dict[str, Any] = {}
     ) -> ProfileInfo:
         """
         Create a new profile; returns the existing one if already present.
@@ -153,22 +155,26 @@ class ProfileManager:
         -profile_id : id/name of the profile to create
 
         - db_credentials : Dict[str , Any] = {}
-            - storage_type : type of storage must use from camouchat-core's StorageType 
-            - username : username of the database 
-            - password : password of the database 
+            - storage_type : type of storage must use from camouchat-core's StorageType
+            - username : username of the database
+            - password : password of the database
             - host : host of the database
-            - port : port of the database 
-            - database_name : name of the database 
+            - port : port of the database
+            - database_name : name of the database
 
         :return - ProfileInfo object
         """
         profile_dir = self.directory.get_profile_dir(platform, profile_id)
+        p_log = get_profile_browser_logger(name="ProfileManager", profile_id=profile_id)
 
-        if profile_dir.exists():
+        metadata_file = profile_dir / "metadata.json"
+
+        if profile_dir.exists() and metadata_file.exists():
+            p_log.info(f"Skiping, profile exists with name [{profile_id}]")
             return self.get_profile(platform, profile_id)
-        else :
-            profile_dir.mkdir(parents=True, exist_ok=True)
-        
+        else:
+            self.directory.setup_profile_directories(platform, profile_id)
+
         # sanitize db_credentials
         if not db_credentials:
             db_credentials = {
@@ -177,19 +183,17 @@ class ProfileManager:
                 "password": None,
                 "host": None,
                 "port": None,
-                "database_name": None
+                "database_name": None,
             }
-        db_credentials["database_path"] = str(self.directory.get_database_path(platform, profile_id))
+        db_credentials["database_path"] = str(
+            self.directory.get_database_path(platform, profile_id)
+        )
 
         metadata = self._generate_metadata(
-            platform=platform,
-            profile_id=profile_id,
-            db_credentials=db_credentials
+            platform=platform, profile_id=profile_id, db_credentials=db_credentials
         )
         self._write_metadata(platform, profile_id, metadata)
 
-        # Use profile-specific browser logger
-        p_log = get_profile_browser_logger(name="ProfileManager", profile_id=profile_id)
         p_log.info(
             f"Profile created with name [{profile_id}] & stored at [{profile_dir}]"
         )
@@ -198,6 +202,8 @@ class ProfileManager:
     def get_profile(self, platform: Platform, profile_id: str) -> ProfileInfo:
         """Return profile info for an existing profile."""
         metadata = self._read_metadata(platform, profile_id)
+        p_log = get_profile_browser_logger(name="ProfileManager", profile_id=profile_id)
+        p_log.debug(f"Retrieved profile [{profile_id}] for platform [{platform}]")
         return ProfileInfo.from_metadata(metadata)
 
     def is_profile_exists(self, platform: Platform, profile_id: str) -> bool:
@@ -232,6 +238,7 @@ class ProfileManager:
                         profile.name for profile in plat.iterdir() if profile.is_dir()
                     ]
 
+        self.log.debug(f"Listed profiles. Total platforms checked: {len(results)}")
         return results
 
     # ------------------------------------------------------------------
@@ -313,6 +320,10 @@ class ProfileManager:
             )
 
         encoded_key = key_file.read_text(encoding="utf-8").strip()
+
+        p_log = get_profile_browser_logger(name="ProfileManager", profile_id=profile_id)
+        p_log.debug(f"Encryption key retrieved for profile [{profile_id}]")
+
         return KeyManager.decode_key_from_storage(encoded_key)
 
     def is_encryption_enabled(self, platform: Platform, profile_id: str) -> bool:
@@ -350,6 +361,12 @@ class ProfileManager:
         metadata["encryption"]["created_at"] = None
         self._write_metadata(platform, profile_id, metadata)
 
+        # Use profile-specific browser logger
+        p_log = get_profile_browser_logger(name="ProfileManager", profile_id=profile_id)
+        p_log.warning(
+            f"Encryption disabled for profile [{profile_id}] & Key Destroyed."
+        )
+
     # ------------------------------------------------------------------
     # Profile activation / deactivation
     # ------------------------------------------------------------------
@@ -368,14 +385,14 @@ class ProfileManager:
         else:
             return True
 
-    async def close_profile(
-        self, platform: Platform, profile_id: str, force: bool = False
-    ) -> None:
+    async def close_profile(self, profile: ProfileInfo, force: bool = False) -> None:
         """closes the profile
-        :param platform: Platform object
-        :param profile_id: Profile ID
+        :param profile: ProfileInfo
         :param force: Force close | Default = False
         """
+        profile_id = profile.profile_id
+        platform = profile.platform
+
         profile_dir = self.directory.get_profile_dir(platform, profile_id)
         metadata_file = profile_dir / "metadata.json"
         lock_file = profile_dir / ".lock"
@@ -392,7 +409,7 @@ class ProfileManager:
         pid = data["status"].get("last_active_pid")
 
         if pid:
-            closed = await CamoufoxBrowser.close_browser_by_pid(pid)
+            closed = await CamoufoxBrowser.close_browser_by_profile(profile_id)
 
             if not closed:
                 if force and ProfileManager.is_pid_alive(pid):
@@ -416,8 +433,11 @@ class ProfileManager:
 
         ProfileManager.__dec__()
 
+        p_log = get_profile_browser_logger(name="ProfileManager", profile_id=profile_id)
+        p_log.info(f"Profile closed successfully [{profile_id}]")
+
     def activate_profile(
-        self, platform: Platform, profile_id: str, browser_obj: CamoufoxBrowser
+        self, platform: Platform, profile_id: str, browser: CamoufoxBrowser
     ) -> None:
         """
         Activate a profile. Raises if already active with a live PID.
@@ -454,7 +474,7 @@ class ProfileManager:
                 lock_file.unlink()
 
         if ProfileManager.__p_count__() >= 1:
-            browser_obj.config.headless = True
+            browser.config.headless = True
 
         ProfileManager.__inc__()
 
@@ -467,20 +487,23 @@ class ProfileManager:
 
         lock_file.write_text(str(os.getpid()))
 
-    def delete_profile(
-        self, platform: Platform, profile_id: str, force: bool = False
-    ) -> None:
+        p_log = get_profile_browser_logger(name="ProfileManager", profile_id=profile_id)
+        p_log.info(f"Profile activated successfully [{profile_id}]")
+
+    def delete_profile(self, profile: ProfileInfo, force: bool = False) -> None:
         """
         Completely delete a profile from the saved disk.
         To delete & remove access on your phone follow :
         1. Activate the profile.
         2. close the bot | profile .
         3. remove access to the latest active browser in "Linked Devices"
-        :param platform: Platform object
-        :param profile_id: profile ID
+        :param profile: ProfileInfo
         :param force: Force delete | Default = False
         :return: None
         """
+        platform = profile.platform
+        profile_id = profile.profile_id
+
         profile_dir = self.directory.get_profile_dir(platform, profile_id)
 
         if not profile_dir.exists():
@@ -495,9 +518,10 @@ class ProfileManager:
 
         if metadata["status"]["is_active"] and not force:
             raise ValueError(
-                f"Cannot delete active profile '{profile_id}'. Deactivate first or use force=True."
+                f"Cannot delete active profile [{profile_id}]. Deactivate first or use force=True."
             )
 
-        self.log.info("Deleting profile %s platform : %s", profile_id, platform)
+        self.log.debug(f"Deleting profile [{profile_id}] platform [{platform}]")
 
         shutil.rmtree(profile_dir)
+        self.log.info(f"Profile deleted successfully [{profile_id}]")

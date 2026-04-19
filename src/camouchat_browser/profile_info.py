@@ -67,7 +67,6 @@ class ProfileInfo:
     port: Optional[int]
     database_name: Optional[str]
 
-
     # --- Runtime state ---
     is_active: bool
     last_active_pid: Optional[int]
@@ -76,7 +75,7 @@ class ProfileInfo:
     encryption: Dict[str, Any]
 
     @classmethod
-    def from_metadata(cls, metadata: Dict[str , Any]) -> "ProfileInfo":
+    def from_metadata(cls, metadata: Dict[str, Any]) -> "ProfileInfo":
         """
         Construct a ProfileInfo instance from raw metadata and a directory manager.
 
@@ -101,7 +100,6 @@ class ProfileInfo:
             version=metadata["version"],
             created_at=metadata["created_at"],
             last_used=metadata["last_used"],
-
             # Paths
             profile_dir=Path(metadata["paths"]["profile_dir"]),
             fingerprint_path=Path(metadata["paths"]["fingerprint_file"]),
@@ -111,8 +109,6 @@ class ProfileInfo:
             media_videos_dir=Path(metadata["paths"]["media_videos"]),
             media_voice_dir=Path(metadata["paths"]["media_voice"]),
             media_documents_dir=Path(metadata["paths"]["media_documents"]),
-
-
             # database
             database_path=Path(metadata["database"]["database_path"]),
             db_type=metadata["database"]["storage_type"],
@@ -121,16 +117,13 @@ class ProfileInfo:
             host=metadata["database"]["host"],
             port=metadata["database"]["port"],
             database_name=metadata["database"]["database_name"],
-
-
             # Runtime
             is_active=status.get("is_active", False),
             last_active_pid=status.get("last_active_pid"),
-
             # Security
             encryption=metadata["encryption"],
         )
-    
+
     def to_dict(self) -> dict:
         return {
             "profile_id": self.profile_id,
@@ -157,9 +150,9 @@ class ProfileInfo:
             "last_active_pid": self.last_active_pid,
             "encryption": self.encryption,
         }
-    
+
     def __str__(self) -> str:
         return str(self.to_dict())
-    
+
     def __repr__(self) -> str:
         return f"ProfileInfo({self.to_dict()})"

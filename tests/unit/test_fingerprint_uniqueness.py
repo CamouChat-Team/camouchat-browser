@@ -5,7 +5,7 @@ Unit tests for fingerprint uniqueness in BrowserForge.
 from unittest.mock import Mock, patch
 import pytest
 from browserforge.fingerprints import Fingerprint
-
+import logging
 from camouchat_browser import browserforge as bf_module
 from camouchat_browser.profile_info import ProfileInfo
 from camouchat_core import Platform
@@ -20,7 +20,7 @@ def mock_logger():
 
 @pytest.fixture
 def browserforge(mock_logger):
-    return BrowserForge(log=mock_logger)
+    return BrowserForge()
 
 
 def test_get_all_existing_fingerprints(browserforge, tmp_path):
@@ -52,7 +52,8 @@ def test_get_all_existing_fingerprints(browserforge, tmp_path):
     assert fg2 in fgs
 
 
-def test_gen_fg_avoids_duplicates(browserforge):
+def test_gen_fg_avoids_duplicates(browserforge, caplog):
+    caplog.set_level(logging.DEBUG, logger="camouchat")
     """Test that __gen_fg__ retries if a duplicate is generated."""
     dup_fg = Mock(spec=Fingerprint)
     dup_fg.screen = Mock(width=1920, height=1080)
@@ -71,9 +72,7 @@ def test_gen_fg_avoids_duplicates(browserforge):
 
             assert result == unique_fg
             assert mock_gen_instance.generate.call_count == 2
-            browserforge.log.warning.assert_called_with(
-                "🔁 Generated fingerprint already exists in another profile. Regenerating... (attempt 1)"
-            )
+            assert "Generated fingerprint already exists" in caplog.text
 
 
 def test_get_fg_integration(browserforge, tmp_path):

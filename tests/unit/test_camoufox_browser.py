@@ -4,14 +4,12 @@ Tests browser initialization, page management, and cleanup.
 """
 
 import logging
-from unittest.mock import Mock, AsyncMock, patch
+from unittest.mock import AsyncMock, Mock, patch
 
 import pytest
-from playwright.async_api import BrowserContext, Page
-
-
 from camouchat_browser import camoufox_browser as cb_module
 from camouchat_browser.exceptions import BrowserException
+from playwright.async_api import BrowserContext, Page
 
 CamoufoxBrowser = cb_module.CamoufoxBrowser
 
@@ -43,7 +41,7 @@ def mock_browser_config(mock_browserforge):
         locale="en-US",
         enable_cache=True,
         headless=True,
-        fingerprint_obj=mock_browserforge,
+        fingerprint=None,
     )
 
 
@@ -108,7 +106,7 @@ def test_init_success(mock_browser_config, mock_profile_info, mock_logger):
 
     assert browser.config == mock_browser_config
     assert browser.profile == mock_profile_info
-    assert browser.BrowserForge == mock_browser_config.fingerprint_obj
+    assert browser.BrowserForge is not None
     assert browser.log == mock_logger
 
 
@@ -121,39 +119,6 @@ def test_init_missing_logger(mock_browser_config, mock_profile_info):
     )
     # browser.log is a CamouAdapter wrapping a logger named "camouchat.CamoufoxBrowser"
     assert browser.log.logger.name == "camouchat.CamoufoxBrowser"
-
-
-def test_init_missing_browserforge(mock_browser_config, mock_profile_info, mock_logger):
-    """Test CamoufoxBrowser raises error without BrowserForge."""
-    mock_browser_config.fingerprint_obj = None
-    with pytest.raises(BrowserException, match="BrowserForge is missing"):
-        CamoufoxBrowser(
-            config=mock_browser_config, profile=mock_profile_info, log=mock_logger
-        )
-
-
-def test_init_missing_cache_dir(mock_browser_config, mock_profile_info, mock_logger):
-    """Test CamoufoxBrowser raises error without cache directory."""
-    mock_profile_info.cache_dir = None
-    with pytest.raises(BrowserException, match="Cache dir path is missing"):
-        CamoufoxBrowser(
-            config=mock_browser_config,
-            profile=mock_profile_info,
-            log=mock_logger,
-        )
-
-
-def test_init_missing_fingerprint_path(
-    mock_browser_config, mock_profile_info, mock_logger
-):
-    """Test CamoufoxBrowser raises error without fingerprint path."""
-    mock_profile_info.fingerprint_path = None
-    with pytest.raises(BrowserException, match="Fingerprint path is missing"):
-        CamoufoxBrowser(
-            config=mock_browser_config,
-            profile=mock_profile_info,
-            log=mock_logger,
-        )
 
 
 # ============================================================================
@@ -178,11 +143,12 @@ async def test_getInstance_creates_browser(camoufox_browser, mock_browserforge):
         with patch(
             "camouchat_browser.camoufox_browser.launch_options", return_value={}
         ):
-            result = await camoufox_browser.get_instance()
+            with patch.object(camoufox_browser.BrowserForge, "get_fg") as mock_get_fg:
+                result = await camoufox_browser.get_instance()
 
-            assert result == mock_context
-            assert camoufox_browser.browser == mock_context
-            mock_browserforge.get_fg.assert_called_once()
+                assert result == mock_context
+                assert camoufox_browser.browser == mock_context
+                mock_get_fg.assert_called_once()
 
 
 @pytest.mark.asyncio
@@ -218,10 +184,11 @@ async def test_GetBrowser_success(camoufox_browser, mock_browserforge):
         with patch(
             "camouchat_browser.camoufox_browser.launch_options", return_value={}
         ):
-            result = await camoufox_browser.__GetBrowser__()
+            with patch.object(camoufox_browser.BrowserForge, "get_fg") as mock_get_fg:
+                result = await camoufox_browser.__GetBrowser__()
 
-            assert result == mock_context
-            mock_browserforge.get_fg.assert_called_once()
+                assert result == mock_context
+                mock_get_fg.assert_called_once()
 
 
 @pytest.mark.asyncio
@@ -380,20 +347,20 @@ async def test_close_browser_success(camoufox_browser):
     """Test close_browser successfully closes browser context."""
     mock_context = AsyncMock(spec=BrowserContext)
     camoufox_browser.browser = mock_context
-    pid = 12345
-    CamoufoxBrowser.Map[pid] = mock_context
+    profile_id = "test_profile_id"
+    CamoufoxBrowser.Map[profile_id] = mock_context
 
-    result = await CamoufoxBrowser.close_browser_by_pid(pid)
+    result = await CamoufoxBrowser.close_browser_by_profile(profile_id)
 
     assert result is True
     mock_context.__aexit__.assert_called_once()
-    assert pid not in CamoufoxBrowser.Map
+    assert profile_id not in CamoufoxBrowser.Map
 
 
 @pytest.mark.asyncio
 async def test_close_browser_already_closed(camoufox_browser):
     """Test close_browser returns True if browser already None."""
-    result = await CamoufoxBrowser.close_browser_by_pid(99999)
+    result = await CamoufoxBrowser.close_browser_by_profile("not_exist")
 
     assert result is True
 
@@ -404,10 +371,10 @@ async def test_close_browser_error(camoufox_browser, mock_logger):
     mock_context = AsyncMock(spec=BrowserContext)
     mock_context.__aexit__.side_effect = Exception("Close failed")
 
-    pid = 12346
-    CamoufoxBrowser.Map[pid] = mock_context
+    profile_id = "test_profile_error"
+    CamoufoxBrowser.Map[profile_id] = mock_context
     camoufox_browser.browser = mock_context
 
-    result = await CamoufoxBrowser.close_browser_by_pid(pid)
+    result = await CamoufoxBrowser.close_browser_by_profile(profile_id)
 
     assert result is False

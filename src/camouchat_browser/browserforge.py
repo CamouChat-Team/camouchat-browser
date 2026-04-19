@@ -9,9 +9,8 @@ that match the host's actual display dimensions.
 import json
 import os
 import pickle
-from logging import Logger, LoggerAdapter
 from pathlib import Path
-from typing import Optional, Tuple, Union
+from typing import Optional, Tuple
 
 from browserforge.fingerprints import Fingerprint, FingerprintGenerator
 from camouchat_core import Platform
@@ -31,10 +30,8 @@ class BrowserForge:
     across multiple sessions and avoid detection by screen-size mismatch.
     """
 
-    log: Union[Logger, LoggerAdapter]
-
-    def __init__(self, log: Optional[Union[Logger, LoggerAdapter]] = None) -> None:
-        self.log = log or logger
+    def __init__(self) -> None:
+        self.log = logger
 
     def get_fg(self, profile: ProfileInfo) -> Fingerprint:
         """
@@ -113,7 +110,7 @@ class BrowserForge:
             ):
                 if fg in avoid:
                     if self.log:
-                        self.log.warning(
+                        self.log.debug(
                             f"🔁 Generated fingerprint already exists in another profile. Regenerating... (attempt {attempt})"
                         )
                     if attempt < 30:
@@ -124,7 +121,7 @@ class BrowserForge:
                 break
 
             if self.log:
-                self.log.warning(
+                self.log.debug(
                     f"🔁 Invalid fingerprint screen ({w}x{h}) vs real ({real_w}x{real_h}). Regenerating... ({attempt})"
                 )
 

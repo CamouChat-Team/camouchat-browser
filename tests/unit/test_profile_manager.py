@@ -24,8 +24,8 @@ def test_profile_manager_manual():
     assert info.profile_id == "test1"
 
     # Delete both profiles
-    pm.delete_profile(Platform.WHATSAPP, "test1", force=True)
-    pm.delete_profile(Platform.WHATSAPP, "test2", force=True)
+    pm.delete_profile(pm.get_profile(Platform.WHATSAPP, "test1"), force=True)
+    pm.delete_profile(pm.get_profile(Platform.WHATSAPP, "test2"), force=True)
 
     assert not pm.is_profile_exists(Platform.WHATSAPP, "test1")
     assert not pm.is_profile_exists(Platform.WHATSAPP, "test2")

@@ -2,7 +2,7 @@ from pathlib import Path
 
 from platformdirs import PlatformDirs
 
-# Todo , add Directory based logs
+from .browser_logger import logger, get_profile_browser_logger
 
 
 class DirectoryManager:
@@ -28,13 +28,42 @@ class DirectoryManager:
     def _ensure_base_dirs(self):
         """Ensure that base directories (root, cache, logs, platforms) exist."""
         for d in [self.root_dir, self.cache_dir, self.log_dir, self.platforms_dir]:
-            d.mkdir(parents=True, exist_ok=True)
+            if not d.exists():
+                d.mkdir(parents=True, exist_ok=True)
+                logger.debug(f"Directory created: {d}")
+
+    def setup_profile_directories(self, platform: str, profile_id: str) -> None:
+        """Creates the entire directory structure for a profile at once."""
+        self.get_platform_dir(platform).mkdir(parents=True, exist_ok=True)
+        self.get_profile_dir(platform, profile_id).mkdir(parents=True, exist_ok=True)
+        self.get_cache_dir(platform, profile_id).mkdir(parents=True, exist_ok=True)
+        self.get_backup_dir(platform, profile_id).mkdir(parents=True, exist_ok=True)
+        self.get_media_dir(platform, profile_id).mkdir(parents=True, exist_ok=True)
+        self.get_media_images_dir(platform, profile_id).mkdir(
+            parents=True, exist_ok=True
+        )
+        self.get_media_videos_dir(platform, profile_id).mkdir(
+            parents=True, exist_ok=True
+        )
+        self.get_media_voice_dir(platform, profile_id).mkdir(
+            parents=True, exist_ok=True
+        )
+        self.get_media_documents_dir(platform, profile_id).mkdir(
+            parents=True, exist_ok=True
+        )
+
+        self.get_fingerprint_file_path(platform, profile_id).touch(exist_ok=True)
+        self.get_key_file_path(platform, profile_id).touch(exist_ok=True)
+        p_log = get_profile_browser_logger(
+            name="DirectoryManager", profile_id=profile_id
+        )
+        p_log.info(
+            f"Initialized directory structure for profile '{profile_id}' on platform '{platform}'"
+        )
 
     def get_platform_dir(self, platform: str) -> Path:
         """Returns the directory for a specific platform."""
-        path = self.platforms_dir / platform.lower()
-        path.mkdir(parents=True, exist_ok=True)
-        return path
+        return self.platforms_dir / platform.lower()
 
     def get_profile_dir(self, platform: str, profile_id: str) -> Path:
         """Returns the base directory for a specific profile on a platform."""
@@ -45,10 +74,8 @@ class DirectoryManager:
         return self.get_profile_dir(platform, profile_id) / "messages.db"
 
     def get_fingerprint_file_path(self, platform: str, profile_id: str) -> Path:
-        """Returns the path to the fingerprint file for a profile and ensures it exists."""
-        path = self.get_profile_dir(platform, profile_id) / "fingerprint.pkl"
-        path.touch(exist_ok=True)
-        return path
+        """Returns the path to the fingerprint file for a profile."""
+        return self.get_profile_dir(platform, profile_id) / "fingerprint.pkl"
 
     def get_key_file_path(self, platform: str, profile_id: str) -> Path:
         """
@@ -60,9 +87,7 @@ class DirectoryManager:
 
         File format: raw base64-encoded 32-byte AES-256 key (single line, no newline).
         """
-        path = self.get_profile_dir(platform, profile_id) / "encryption.key"
-        path.touch(exist_ok=True)
-        return path
+        return self.get_profile_dir(platform, profile_id) / "encryption.key"
 
     def get_error_trace_file(self) -> Path:
         """Returns the path to the global ErrorTrace log file."""
@@ -78,45 +103,31 @@ class DirectoryManager:
 
     def get_cache_dir(self, platform: str, profile_id: str) -> Path:
         """Returns the cache directory for a specific profile."""
-        path = self.get_profile_dir(platform, profile_id) / "cache"
-        path.mkdir(parents=True, exist_ok=True)
-        return path
+        return self.get_profile_dir(platform, profile_id) / "cache"
 
     def get_backup_dir(self, platform: str, profile_id: str) -> Path:
         """Returns the backup directory for a specific profile."""
-        path = self.get_profile_dir(platform, profile_id) / "backups"
-        path.mkdir(parents=True, exist_ok=True)
-        return path
+        return self.get_profile_dir(platform, profile_id) / "backups"
 
     def get_media_dir(self, platform: str, profile_id: str) -> Path:
         """Returns the root media directory for a specific profile."""
-        path = self.get_profile_dir(platform, profile_id) / "media"
-        path.mkdir(parents=True, exist_ok=True)
-        return path
+        return self.get_profile_dir(platform, profile_id) / "media"
 
     def get_media_images_dir(self, platform: str, profile_id: str) -> Path:
         """Returns the images media directory for a specific profile."""
-        path = self.get_media_dir(platform, profile_id) / "images"
-        path.mkdir(parents=True, exist_ok=True)
-        return path
+        return self.get_media_dir(platform, profile_id) / "images"
 
     def get_media_videos_dir(self, platform: str, profile_id: str) -> Path:
         """Returns the videos media directory for a specific profile."""
-        path = self.get_media_dir(platform, profile_id) / "videos"
-        path.mkdir(parents=True, exist_ok=True)
-        return path
+        return self.get_media_dir(platform, profile_id) / "videos"
 
     def get_media_voice_dir(self, platform: str, profile_id: str) -> Path:
         """Returns the voice media directory for a specific profile."""
-        path = self.get_media_dir(platform, profile_id) / "voice"
-        path.mkdir(parents=True, exist_ok=True)
-        return path
+        return self.get_media_dir(platform, profile_id) / "voice"
 
     def get_media_documents_dir(self, platform: str, profile_id: str) -> Path:
         """Returns the documents media directory for a specific profile."""
-        path = self.get_media_dir(platform, profile_id) / "documents"
-        path.mkdir(parents=True, exist_ok=True)
-        return path
+        return self.get_media_dir(platform, profile_id) / "documents"
 
     # ----------------------------
     # Global paths
@@ -129,4 +140,3 @@ class DirectoryManager:
     def get_log_root(self) -> Path:
         """Returns the root log directory."""
         return self.log_dir
-
