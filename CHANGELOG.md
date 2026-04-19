@@ -5,9 +5,24 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.7.1] - unreleased
+
+### Added
+
+- Added missing __str__ and __repr__ methods to ProfileInfo dataclass.
+
+### Changed
+
+- ProfileInfo gets full data now from metadata dictionary. 
+- ProfileManager now also adds More database clean & safe credentials.
+
+### Fixed
+
+- Cross Concerned of db init urls in the profileManager brought by older code separation is resolved
+
 ---
 
-## [0.7.0] — Unreleased
+## [0.7.0] — 2026-04-15
 
 First standalone release of `camouchat-browser`, extracted from the CamouChat monorepo. Versioning begins at `0.7.0` to reflect feature parity with the rest of the CamouChat ecosystem at the time of extraction.
 

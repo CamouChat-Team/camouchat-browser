@@ -44,6 +44,12 @@ class DirectoryManager:
         """Returns the path to the messages database for a profile."""
         return self.get_profile_dir(platform, profile_id) / "messages.db"
 
+    def get_fingerprint_file_path(self, platform: str, profile_id: str) -> Path:
+        """Returns the path to the fingerprint file for a profile and ensures it exists."""
+        path = self.get_profile_dir(platform, profile_id) / "fingerprint.pkl"
+        path.touch(exist_ok=True)
+        return path
+
     def get_key_file_path(self, platform: str, profile_id: str) -> Path:
         """
         Returns the path to the encryption key file for a profile.
@@ -54,7 +60,9 @@ class DirectoryManager:
 
         File format: raw base64-encoded 32-byte AES-256 key (single line, no newline).
         """
-        return self.get_profile_dir(platform, profile_id) / "encryption.key"
+        path = self.get_profile_dir(platform, profile_id) / "encryption.key"
+        path.touch(exist_ok=True)
+        return path
 
     def get_error_trace_file(self) -> Path:
         """Returns the path to the global ErrorTrace log file."""
@@ -122,6 +130,3 @@ class DirectoryManager:
         """Returns the root log directory."""
         return self.log_dir
 
-
-# should be removed with the custom_logger itself driven paths .
-ErrorTrace_file = DirectoryManager().get_error_trace_file()

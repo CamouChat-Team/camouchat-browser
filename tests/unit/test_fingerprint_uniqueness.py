@@ -40,7 +40,7 @@ def test_get_all_existing_fingerprints(browserforge, tmp_path):
     fg1 = Mock(spec=Fingerprint)
     fg2 = Mock(spec=Fingerprint)
 
-    with patch("camouchat_browser.directory.DirectoryManager") as MockDM:
+    with patch("camouchat_browser.browserforge.DirectoryManager") as MockDM:
         mock_dm = MockDM.return_value
         mock_dm.get_platform_dir.return_value = whatsapp_dir
 

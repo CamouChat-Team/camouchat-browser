@@ -14,9 +14,9 @@ import signal
 from datetime import datetime, timezone
 from logging import Logger, LoggerAdapter
 from pathlib import Path
-from typing import List, Optional, Dict, Union
+from typing import List, Optional, Dict, Union, Any
 
-from camouchat_core import Platform, StorageType, KeyManager
+from camouchat_core import Platform, KeyManager
 
 from .browser_logger import logger, get_profile_browser_logger
 from .camoufox_browser import CamoufoxBrowser
@@ -42,8 +42,7 @@ class ProfileManager:
         self.directory = DirectoryManager()
         self.log = log or logger
 
-        # ------------------------------------------------------------------
-
+    # ------------------------------------------------------------------
     # Internal helpers
     # ------------------------------------------------------------------
 
@@ -51,19 +50,37 @@ class ProfileManager:
         self,
         platform: Platform,
         profile_id: str,
-        storage_type: StorageType = StorageType.SQLITE,
-        database_url: Optional[str] = None,
-    ) -> dict:
+        db_credentials : Dict[str , Any] = {}
+    ) -> Dict[str, Any]:
+        """
+        Generates metadata for a new profile.
+
+        Args:
+            platform: The platform for which to generate metadata.
+            profile_id: The ID of the profile for which to generate metadata.
+            db_credentials: Database credentials.
+
+        Returns:
+            A dictionary containing the metadata for the profile.
+        """
         now = datetime.now(timezone.utc).isoformat()
 
-        db_path = self.directory.get_database_path(platform, profile_id)
-        if not database_url:
-            if storage_type == StorageType.SQLITE:
-                database_url = f"sqlite+aiosqlite:///{db_path}"
-            elif storage_type == StorageType.MYSQL:
-                database_url = "mysql+aiomysql://user:pass@localhost/camouchat"
-            elif storage_type == StorageType.POSTGRESQL:
-                database_url = "postgresql+asyncpg://user:pass@localhost/camouchat"
+        profile_dir = self.directory.get_profile_dir(platform, profile_id)
+        fingerprint_file_path = self.directory.get_fingerprint_file_path(platform, profile_id)
+        cache_dir = self.directory.get_cache_dir(platform, profile_id)
+        media_dir = self.directory.get_media_dir(platform, profile_id)
+        media_images_dir = self.directory.get_media_images_dir(platform, profile_id)
+        media_videos_dir = self.directory.get_media_videos_dir(platform, profile_id)
+        media_voice_dir = self.directory.get_media_voice_dir(platform, profile_id)
+        media_documents_dir = self.directory.get_media_documents_dir(platform, profile_id)
+        key_file_path = self.directory.get_key_file_path(platform, profile_id)
+
+        encryption : Dict[str, Any] = {
+            "enabled": False,
+            "algorithm": "AES-256-GCM",
+            "key_file": str(key_file_path),
+            "created_at": None, 
+        }
 
         return {
             "profile_id": profile_id,
@@ -71,30 +88,18 @@ class ProfileManager:
             "version": "0.6",
             "created_at": now,
             "last_used": now,
-            "database": {
-                "type": storage_type,
-                "url": database_url,
-            },
+            "database": db_credentials,
             "paths": {
-                "profile_dir": str(
-                    self.directory.get_profile_dir(platform, profile_id)
-                ),
-                "fingerprint_file": "fingerprint.pkl",
-                "cache_dir": "cache",
-                "media_dir": "media",
-                "media_images": "media/images",
-                "media_videos": "media/videos",
-                "media_voice": "media/voice",
-                "database_file": "messages.db",
-                "media_documents": "media/documents",
+                "profile_dir": str(profile_dir),
+                "fingerprint_file": str(fingerprint_file_path),
+                "cache_dir": str(cache_dir),
+                "media_dir": str(media_dir),
+                "media_images": str(media_images_dir),
+                "media_videos": str(media_videos_dir),
+                "media_voice": str(media_voice_dir),
+                "media_documents": str(media_documents_dir),
             },
-            # The actual key lives in encryption.key — NOT here.
-            "encryption": {
-                "enabled": False,
-                "algorithm": "AES-256-GCM",
-                "key_file": "encryption.key",
-                "created_at": None,  # set when enable_encryption() is called
-            },
+            "encryption": encryption,
             "status": {
                 "is_active": False,
                 "last_active_pid": None,
@@ -102,7 +107,7 @@ class ProfileManager:
             },
         }
 
-    def _read_metadata(self, platform: Platform, profile_id: str) -> dict:
+    def _read_metadata(self, platform: Platform, profile_id: str) -> Dict[str, Any]:
         profile_dir = self.directory.get_profile_dir(platform, profile_id)
         metadata_file = profile_dir / "metadata.json"
         if not metadata_file.exists():
@@ -112,7 +117,7 @@ class ProfileManager:
         with open(metadata_file) as f:
             return json.load(f)
 
-    def _write_metadata(self, platform: Platform, profile_id: str, data: dict) -> None:
+    def _write_metadata(self, platform: Platform, profile_id: str, data: Dict[str, Any]) -> None:
         profile_dir = self.directory.get_profile_dir(platform, profile_id)
         with open(profile_dir / "metadata.json", "w") as f:
             json.dump(data, f, indent=4)
@@ -138,8 +143,7 @@ class ProfileManager:
         self,
         platform: Platform,
         profile_id: str,
-        storage_type: StorageType = StorageType.SQLITE,
-        database_url: Optional[str] = None,
+        db_credentials : Dict[str , Any] = {}
     ) -> ProfileInfo:
         """
         Create a new profile; returns the existing one if already present.
@@ -147,9 +151,14 @@ class ProfileManager:
         args :
         -platform : Platform must use from camouchat-core
         -profile_id : id/name of the profile to create
-        -storage_type : type of storage must use from camouchat-core's StorageType , Default set to SQLITE
-        -database_url : specific path to set url
-                        Recommended to keep it default set , as it uses internally correct path to use according to Profile creation.
+
+        - db_credentials : Dict[str , Any] = {}
+            - storage_type : type of storage must use from camouchat-core's StorageType 
+            - username : username of the database 
+            - password : password of the database 
+            - host : host of the database
+            - port : port of the database 
+            - database_name : name of the database 
 
         :return - ProfileInfo object
         """
@@ -157,22 +166,25 @@ class ProfileManager:
 
         if profile_dir.exists():
             return self.get_profile(platform, profile_id)
-
-        profile_dir.mkdir(parents=True, exist_ok=True)
-
-        self.directory.get_cache_dir(platform, profile_id)
-        self.directory.get_media_images_dir(platform, profile_id)
-        self.directory.get_media_videos_dir(platform, profile_id)
-        self.directory.get_media_voice_dir(platform, profile_id)
-        self.directory.get_media_documents_dir(platform, profile_id)
-
-        (profile_dir / "fingerprint.pkl").write_bytes(b"")
+        else :
+            profile_dir.mkdir(parents=True, exist_ok=True)
+        
+        # sanitize db_credentials
+        if not db_credentials:
+            db_credentials = {
+                "storage_type": None,
+                "username": None,
+                "password": None,
+                "host": None,
+                "port": None,
+                "database_name": None
+            }
+        db_credentials["database_path"] = str(self.directory.get_database_path(platform, profile_id))
 
         metadata = self._generate_metadata(
             platform=platform,
             profile_id=profile_id,
-            storage_type=storage_type,
-            database_url=database_url,
+            db_credentials=db_credentials
         )
         self._write_metadata(platform, profile_id, metadata)
 
@@ -181,12 +193,12 @@ class ProfileManager:
         p_log.info(
             f"Profile created with name [{profile_id}] & stored at [{profile_dir}]"
         )
-        return ProfileInfo.from_metadata(metadata, self.directory)
+        return ProfileInfo.from_metadata(metadata)
 
     def get_profile(self, platform: Platform, profile_id: str) -> ProfileInfo:
         """Return profile info for an existing profile."""
         metadata = self._read_metadata(platform, profile_id)
-        return ProfileInfo.from_metadata(metadata, self.directory)
+        return ProfileInfo.from_metadata(metadata)
 
     def is_profile_exists(self, platform: Platform, profile_id: str) -> bool:
         """Check whether a profile directory exists."""
@@ -226,22 +238,18 @@ class ProfileManager:
     # Encryption key management
     # ------------------------------------------------------------------
 
-    def enable_encryption(self, platform: Platform, profile_id: str) -> bytes:
+    def enable_encryption(self, platform: Platform, profile_id: str) -> None:
         """
         Generate a fresh AES-256 key for this profile, persist it to
         ``encryption.key``, and mark encryption as enabled in metadata.
-
-        Returns the raw 32-byte key so the caller can hand it straight
-        to ``MessageProcessor`` without ever having to re-read the file
-        in the same session.
 
         Raises:
             ValueError: If encryption is already enabled for this profile.
 
         Example::
 
-            key = manager.enable_encryption(Platform.WHATSAPP, "my_profile")
-            processor = MessageProcessor(..., encryption_key=key)
+            manager.enable_encryption(Platform.WHATSAPP, "my_profile")
+            key = manager.get_key(Platform.WHATSAPP, "my_profile")
         """
 
         metadata = self._read_metadata(platform, profile_id)
@@ -271,14 +279,11 @@ class ProfileManager:
         self.log.info(
             f"Encryption enabled for profile : [{profile_id}] , platform : [{platform}] , stored at [{key_file}]"
         )
-        return raw_key
 
     def get_key(self, platform: Platform, profile_id: str) -> bytes:
         """
         Load and return the raw AES-256 key for this profile.
-
-        Use this when resuming a session to get the key back for
-        ``MessageProcessor`` or ``MessageDecryptor``.
+        Use this when resuming a session to get the key back for ``MessageDecryptor``.
 
         Raises:
             ValueError: If encryption is not enabled for this profile.
@@ -319,10 +324,10 @@ class ProfileManager:
         """
         Disable encryption for this profile and wipe the key file.
 
-        .. warning::
-            This permanently deletes the encryption key. Any messages already
-            stored as ciphertext in the database will be irrecoverable.
-            Decrypt all messages *before* calling this if you need the plaintext.
+        Warning:
+            - This permanently deletes the encryption key.
+            - Any messages already stored as ciphertext in the database will be irrecoverable.
+            - Decrypt all messages *before* calling this if you need the plaintext.
 
         Raises:
             ValueError: If encryption is not enabled for this profile.
