@@ -1,4 +1,5 @@
 from pathlib import Path
+from typing import Optional
 
 from platformdirs import PlatformDirs
 
@@ -69,9 +70,13 @@ class DirectoryManager:
         """Returns the base directory for a specific profile on a platform."""
         return self.get_platform_dir(platform) / profile_id
 
-    def get_database_path(self, platform: str, profile_id: str) -> Path:
-        """Returns the path to the messages database for a profile."""
-        return self.get_profile_dir(platform, profile_id) / "messages.db"
+    def get_database_path(
+        self, platform: str, profile_id: str, name: Optional[str] = None
+    ) -> Path:
+        """Returns the path to the database file for a profile.
+        Name defaults to None — caller (e.g. SQLAlchemy storage) sets the filename.
+        """
+        return self.get_profile_dir(platform, profile_id) / (name or "messages.db")
 
     def get_fingerprint_file_path(self, platform: str, profile_id: str) -> Path:
         """Returns the path to the fingerprint file for a profile."""

@@ -185,9 +185,7 @@ class ProfileManager:
                 "port": None,
                 "database_name": None,
             }
-        db_credentials["database_path"] = str(
-            self.directory.get_database_path(platform, profile_id)
-        )
+        db_credentials["database_path"] = ""  # set by storage module
 
         metadata = self._generate_metadata(
             platform=platform, profile_id=profile_id, db_credentials=db_credentials

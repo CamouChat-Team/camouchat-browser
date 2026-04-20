@@ -110,7 +110,11 @@ class ProfileInfo:
             media_voice_dir=Path(metadata["paths"]["media_voice"]),
             media_documents_dir=Path(metadata["paths"]["media_documents"]),
             # database
-            database_path=Path(metadata["database"]["database_path"]),
+            database_path=(
+                Path(metadata["database"]["database_path"])
+                if metadata["database"].get("database_path")
+                else None
+            ),
             db_type=metadata["database"]["storage_type"],
             username=metadata["database"]["username"],
             password=metadata["database"]["password"],
