@@ -1,9 +1,8 @@
 from pathlib import Path
-from typing import Optional
 
 from platformdirs import PlatformDirs
-
-from .browser_logger import logger, get_profile_browser_logger
+from typing import Optional
+from .browser_logger import get_profile_browser_logger, logger
 
 
 class DirectoryManager:
@@ -76,7 +75,9 @@ class DirectoryManager:
         """Returns the path to the database file for a profile.
         Name defaults to None — caller (e.g. SQLAlchemy storage) sets the filename.
         """
-        return self.get_profile_dir(platform, profile_id) / (name or "messages.db")
+        path = self.get_profile_dir(platform, profile_id) / (name or "messages.db")
+        path.touch(exist_ok=True)
+        return
 
     def get_fingerprint_file_path(self, platform: str, profile_id: str) -> Path:
         """Returns the path to the fingerprint file for a profile."""
