@@ -1,5 +1,6 @@
 import pytest
 from camouchat_core import Platform
+
 from camouchat_browser import ProfileManager
 
 

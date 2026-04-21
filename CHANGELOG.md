@@ -5,9 +5,31 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.7.1] - unreleased
+
+### Added
+
+- Added missing __str__ and __repr__ methods to ProfileInfo dataclass.
+- directory now have create_directories direct create point.
+- added safe checks & validations in BrowserConfig from_dict method.
+
+### Changed
+
+- ProfileInfo gets full data now from metadata dictionary. 
+- ProfileManager now also adds More database clean & safe credentials.
+- delete_profile, close_profile now takes only ProfileInfo object as a parameter
+- renaming of browser_obj -> browser in activte_profile
+- BrowserConfig.fingerprint_obj is now fingerprint renamed and expects direct fingerprint instead of obj passing -> None passed in camoufoxBrowser makes it call default.
+
+### Fixed
+
+- Cross Concerned of db init urls in the profileManager brought by older code separation is resolved
+- pid redundancy to profile_id based browser closing in CamoufoxBrowser is resolved
+- fix test cases & scripts
+
 ---
 
-## [0.7.0] — Unreleased
+## [0.7.0] — 2026-04-15
 
 First standalone release of `camouchat-browser`, extracted from the CamouChat monorepo. Versioning begins at `0.7.0` to reflect feature parity with the rest of the CamouChat ecosystem at the time of extraction.
 

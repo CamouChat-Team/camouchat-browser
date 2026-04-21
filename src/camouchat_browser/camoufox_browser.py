@@ -4,17 +4,18 @@ from __future__ import annotations
 
 import os
 from logging import Logger, LoggerAdapter
-from typing import Optional, Dict, Union
+from typing import Any, cast
 
-from browserforge.fingerprints import Fingerprint
 import camoufox
+from browserforge.fingerprints import Fingerprint
 from camoufox.async_api import AsyncCamoufox, launch_options
-from playwright.async_api import Page, BrowserContext
+from playwright.async_api import BrowserContext, Page
 
 from .browser_config import BrowserConfig
-from .profile_info import ProfileInfo
-from .exceptions import BrowserException
 from .browser_logger import get_profile_browser_logger
+from .browserforge import BrowserForge
+from .exceptions import BrowserException
+from .profile_info import ProfileInfo
 
 
 class CamoufoxBrowser:
@@ -33,13 +34,13 @@ class CamoufoxBrowser:
     """
 
     # handles Multiple Profiles to multi browser context handling
-    Map: Dict[int, BrowserContext] = {}
+    Map: dict[str, BrowserContext] = {}
 
     def __init__(
         self,
         config: BrowserConfig,
         profile: ProfileInfo,
-        log: Optional[Union[Logger, LoggerAdapter]] = None,
+        log: Logger | LoggerAdapter | None = None,
     ) -> None:
         """
         Initializes the Camoufox browser manager.
@@ -55,21 +56,8 @@ class CamoufoxBrowser:
         )
         self.config = config
         self.profile = profile
-        self.BrowserForge = config.fingerprint_obj
-        self.browser: Optional[BrowserContext] = None
-
-        if self.BrowserForge is None:
-            raise BrowserException("BrowserForge is missing from the browser instance.")
-
-        if self.profile.cache_dir is None:
-            raise BrowserException(
-                "Cache dir path is missing from the browser instance."
-            )
-
-        if self.profile.fingerprint_path is None:
-            raise BrowserException(
-                "Fingerprint path is missing from the browser instance."
-            )
+        self.BrowserForge = BrowserForge()
+        self.browser: BrowserContext | None = None
 
         if not self.config.headless:
             self.log.info(
@@ -80,7 +68,7 @@ class CamoufoxBrowser:
         if self.browser is None:
             self.browser = await self.__GetBrowser__()
             pid = os.getpid()
-            self.Map[pid] = self.browser
+            self.Map[self.profile.profile_id] = self.browser
             self.profile.last_active_pid = pid  # in-memory snapshot in sync
         return self.browser
 
@@ -111,7 +99,19 @@ class CamoufoxBrowser:
         if tries > 5:
             raise BrowserException("Max Camoufox IP retry attempts exceeded")
 
-        fg: Fingerprint = self.BrowserForge.get_fg(profile=self.profile)
+        if self.config.fingerprint is not None:
+            obj = self.config.fingerprint
+            if isinstance(obj, (Fingerprint, dict)):
+                fg = cast(Any, obj)
+            else:
+                self.log.warning(
+                    "Unsupported fingerprint object detected in config. "
+                    "Expected a Fingerprint object or dict. "
+                    "Browser might fail or behave unexpectedly."
+                )
+                fg = cast(Any, obj)
+        else:
+            fg = self.BrowserForge.get_fg(profile=self.profile)
 
         try:
             browser = await AsyncCamoufox(
@@ -166,14 +166,15 @@ class CamoufoxBrowser:
             raise BrowserException("Could not create a new page") from e
 
     @classmethod
-    async def close_browser_by_pid(cls, pid: int) -> bool:
-        browser = cls.Map.get(pid)
+    async def close_browser_by_profile(cls, profile_id: str) -> bool:
+        """Close a specific browser context by profile_id."""
+        browser = cls.Map.get(profile_id)
         if not browser:
             return True
 
         try:
             await browser.__aexit__(None, None, None)
-            cls.Map.pop(pid, None)
+            cls.Map.pop(profile_id, None)
             return True
         except Exception:
             return False

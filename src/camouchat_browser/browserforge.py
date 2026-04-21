@@ -6,12 +6,11 @@ browserforge library, ensuring consistent and stealthy browser identities
 that match the host's actual display dimensions.
 """
 
+import contextlib
 import json
 import os
 import pickle
-from logging import Logger, LoggerAdapter
 from pathlib import Path
-from typing import Optional, Tuple, Union
 
 from browserforge.fingerprints import Fingerprint, FingerprintGenerator
 from camouchat_core import Platform
@@ -31,10 +30,8 @@ class BrowserForge:
     across multiple sessions and avoid detection by screen-size mismatch.
     """
 
-    log: Union[Logger, LoggerAdapter]
-
-    def __init__(self, log: Optional[Union[Logger, LoggerAdapter]] = None) -> None:
-        self.log = log or logger
+    def __init__(self) -> None:
+        self.log = logger
 
     def get_fg(self, profile: ProfileInfo) -> Fingerprint:
         """
@@ -86,7 +83,7 @@ class BrowserForge:
 
         return fingerprints
 
-    def __gen_fg__(self, avoid: Optional[list[Fingerprint]] = None) -> Fingerprint:
+    def __gen_fg__(self, avoid: list[Fingerprint] | None = None) -> Fingerprint:
         """
         Generates a new fingerprint.
         :param avoid: Optional list of fingerprints to avoid
@@ -107,13 +104,10 @@ class BrowserForge:
             w, h = fg.screen.width, fg.screen.height
             attempt += 1
 
-            if (
-                abs(w - real_w) / real_w < tolerance
-                and abs(h - real_h) / real_h < tolerance
-            ):
+            if abs(w - real_w) / real_w < tolerance and abs(h - real_h) / real_h < tolerance:
                 if fg in avoid:
                     if self.log:
-                        self.log.warning(
+                        self.log.debug(
                             f"🔁 Generated fingerprint already exists in another profile. Regenerating... (attempt {attempt})"
                         )
                     if attempt < 30:
@@ -124,21 +118,19 @@ class BrowserForge:
                 break
 
             if self.log:
-                self.log.warning(
+                self.log.debug(
                     f"🔁 Invalid fingerprint screen ({w}x{h}) vs real ({real_w}x{real_h}). Regenerating... ({attempt})"
                 )
 
             if attempt >= 10:
                 if self.log:
-                    self.log.warning(
-                        "⚠️ Using last generated fingerprint after 10 attempts"
-                    )
+                    self.log.warning("⚠️ Using last generated fingerprint after 10 attempts")
                 break
 
         return fg
 
     @staticmethod
-    def get_screen_size() -> Tuple[int, int]:
+    def get_screen_size() -> tuple[int, int]:
         """
         Returns the width and height of the primary display in pixels.
         Supports Windows, Linux (X11), and macOS.
@@ -153,10 +145,8 @@ class BrowserForge:
                 import ctypes
 
                 user32 = ctypes.windll.user32  # type: ignore[attr-defined]
-                try:
+                with contextlib.suppress(Exception):
                     user32.SetProcessDPIAware()
-                except Exception:
-                    pass  # older Windows versions
 
                 return user32.GetSystemMetrics(0), user32.GetSystemMetrics(1)
 
@@ -168,9 +158,7 @@ class BrowserForge:
             try:
                 import subprocess
 
-                out = subprocess.check_output(
-                    ["xdpyinfo"], stderr=subprocess.DEVNULL
-                ).decode()
+                out = subprocess.check_output(["xdpyinfo"], stderr=subprocess.DEVNULL).decode()
 
                 for line in out.splitlines():
                     if "dimensions:" in line:
@@ -197,9 +185,7 @@ class BrowserForge:
 
         # ---------------- Unsupported OS ----------------
         else:
-            raise BrowserException(
-                f"Unsupported OS for screen size detection: {system}"
-            )
+            raise BrowserException(f"Unsupported OS for screen size detection: {system}")
 
     @staticmethod
     def get_fingerprint_as_dict(profile: ProfileInfo) -> dict:
@@ -229,10 +215,10 @@ class BrowserForge:
             return data
 
         except json.JSONDecodeError as e:
-            raise BrowserException(f"Invalid fingerprint JSON format: {e}")
+            raise BrowserException(f"Invalid fingerprint JSON format: {e}") from e
 
         except Exception as e:
-            raise BrowserException(f"Failed to load fingerprint JSON: {e}")
+            raise BrowserException(f"Failed to load fingerprint JSON: {e}") from e
 
     def __repr__(self):
         return f"BrowserForge(log={type(self.log).__name__})"

@@ -1,6 +1,6 @@
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Optional, Dict
+from typing import Any
 
 from camouchat_core import Platform
 
@@ -8,18 +8,47 @@ from camouchat_core import Platform
 @dataclass
 class ProfileInfo:
     """
-    Metadata container for a CamouChat profile.
+    Represents metadata and resolved filesystem paths for a CamouChat profile.
 
-    Stores paths, encryption status, and activity state for a specific
-    platform user sandbox.
+    This class acts as a structured container combining:
+    - Raw metadata (loaded from profile storage)
+    - Derived filesystem paths (resolved via directory manager)
+    - Runtime state (active status, process tracking)
+
+    Attributes:
+        profile_id: Unique identifier for the profile.
+        platform: Target platform (e.g., WhatsApp).
+        version: Profile schema/version.
+        created_at: Profile creation timestamp.
+        last_used: Last usage timestamp.
+
+        profile_dir: Root directory of the profile.
+        fingerprint_path: Path to stored browser fingerprint.
+        cache_dir: Browser/cache directory.
+        media_dir: Root media directory.
+
+        media_images_dir: Images storage path.
+        media_videos_dir: Videos storage path.
+        media_voice_dir: Voice notes storage path.
+        media_documents_dir: Documents storage path.
+
+        database_path: Local database file path.
+        database_url: SQLAlchemy-compatible DB URL.
+
+        is_active: Whether profile is currently active.
+        last_active_pid: Last known process ID using this profile.
+
+        encryption: Encryption-related metadata/config.
     """
 
+    # --- Identity ---
     profile_id: str
     platform: Platform
     version: str
     created_at: str
     last_used: str
 
+    # --- Paths ---
     profile_dir: Path
     fingerprint_path: Path
     cache_dir: Path
@@ -28,47 +57,106 @@ class ProfileInfo:
     media_videos_dir: Path
     media_voice_dir: Path
     media_documents_dir: Path
-    database_path: Path
-    database_url: str
 
+    # db credentials.
+    db_type: str | None
+    database_path: Path | None
+    username: str | None
+    password: str | None
+    host: str | None
+    port: int | None
+    database_name: str | None
+
+    # --- Runtime state ---
     is_active: bool
-    last_active_pid: Optional[int]
+    last_active_pid: int | None
 
-    encryption: Dict
+    # --- Security ---
+    encryption: dict[str, Any]
 
     @classmethod
-    def from_metadata(cls, metadata: dict, directory):
-        """Accepts dict & generate ProfileInfo instance"""
-        platform = metadata["platform"]
-        profile_id = metadata["profile_id"]
+    def from_metadata(cls, metadata: dict[str, Any]) -> "ProfileInfo":
+        """
+        Construct a ProfileInfo instance from raw metadata and a directory manager.
 
-        profile_dir = directory.get_profile_dir(platform, profile_id)
-        db_path = directory.get_database_path(platform, profile_id)
+        This method:
+        - Extracts required fields from metadata
+        - Resolves all filesystem paths using `directory`
+        - Applies backward compatibility for database configuration
 
-        # Fallback to sqlite if database_url doesn't exist in older profiles
-        db_url = (
-            metadata.get("database", {}).get("url")
-            or metadata["paths"].get("database_url")
-            or f"sqlite+aiosqlite:///{db_path}"
-        )
+        Args:
+            metadata: Raw metadata dictionary (loaded from profile file).
+
+        Returns:
+            ProfileInfo: Fully initialized profile representation.
+        """
+
+        status = metadata.get("status", {})
 
         return cls(
-            profile_id=profile_id,
-            platform=platform,
+            # Identity
+            profile_id=metadata["profile_id"],
+            platform=metadata["platform"],
             version=metadata["version"],
             created_at=metadata["created_at"],
             last_used=metadata["last_used"],
-            profile_dir=profile_dir,
-            fingerprint_path=profile_dir / "fingerprint.pkl",
-            cache_dir=directory.get_cache_dir(platform, profile_id),
-            media_dir=directory.get_media_dir(platform, profile_id),
-            media_images_dir=directory.get_media_images_dir(platform, profile_id),
-            media_videos_dir=directory.get_media_videos_dir(platform, profile_id),
-            media_voice_dir=directory.get_media_voice_dir(platform, profile_id),
-            media_documents_dir=directory.get_media_documents_dir(platform, profile_id),
-            database_path=db_path,
-            database_url=db_url,
-            is_active=metadata["status"]["is_active"],
-            last_active_pid=metadata["status"]["last_active_pid"],
-            encryption=metadata.get("encryption", {}),
+            # Paths
+            profile_dir=Path(metadata["paths"]["profile_dir"]),
+            fingerprint_path=Path(metadata["paths"]["fingerprint_file"]),
+            cache_dir=Path(metadata["paths"]["cache_dir"]),
+            media_dir=Path(metadata["paths"]["media_dir"]),
+            media_images_dir=Path(metadata["paths"]["media_images"]),
+            media_videos_dir=Path(metadata["paths"]["media_videos"]),
+            media_voice_dir=Path(metadata["paths"]["media_voice"]),
+            media_documents_dir=Path(metadata["paths"]["media_documents"]),
+            # database
+            database_path=(
+                Path(metadata["database"]["database_path"])
+                if metadata["database"].get("database_path")
+                else None
+            ),
+            db_type=metadata["database"]["storage_type"],
+            username=metadata["database"]["username"],
+            password=metadata["database"]["password"],
+            host=metadata["database"]["host"],
+            port=metadata["database"]["port"],
+            database_name=metadata["database"]["database_name"],
+            # Runtime
+            is_active=status.get("is_active", False),
+            last_active_pid=status.get("last_active_pid"),
+            # Security
+            encryption=metadata["encryption"],
         )
+
+    def to_dict(self) -> dict:
+        return {
+            "profile_id": self.profile_id,
+            "platform": self.platform,
+            "version": self.version,
+            "created_at": self.created_at,
+            "last_used": self.last_used,
+            "profile_dir": self.profile_dir,
+            "fingerprint_path": self.fingerprint_path,
+            "cache_dir": self.cache_dir,
+            "media_dir": self.media_dir,
+            "media_images_dir": self.media_images_dir,
+            "media_videos_dir": self.media_videos_dir,
+            "media_voice_dir": self.media_voice_dir,
+            "media_documents_dir": self.media_documents_dir,
+            "database_path": self.database_path,
+            "db_type": self.db_type,
+            "username": self.username,
+            "password": self.password,
+            "host": self.host,
+            "port": self.port,
+            "database_name": self.database_name,
+            "is_active": self.is_active,
+            "last_active_pid": self.last_active_pid,
+            "encryption": self.encryption,
+        }
+
+    def __str__(self) -> str:
+        return str(self.to_dict())
+
+    def __repr__(self) -> str:
+        return f"ProfileInfo({self.to_dict()})"
