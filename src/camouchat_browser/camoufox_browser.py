@@ -101,7 +101,7 @@ class CamoufoxBrowser:
 
         if self.config.fingerprint is not None:
             obj = self.config.fingerprint
-            if isinstance(obj, (Fingerprint, dict)):
+            if isinstance(obj, Fingerprint | dict):
                 fg = cast(Any, obj)
             else:
                 self.log.warning(
