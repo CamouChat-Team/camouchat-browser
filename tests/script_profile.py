@@ -7,10 +7,10 @@ import asyncio
 from camouchat_core import Platform
 
 from camouchat_browser import (
-    ProfileManager,
     BrowserConfig,
     BrowserForge,
     CamoufoxBrowser,
+    ProfileManager,
 )
 
 # ── Profile  ─────────────────────────────────────────────────────────────

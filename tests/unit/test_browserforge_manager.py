@@ -71,10 +71,12 @@ def test_get_fg_generates_new(browserforge, mock_fingerprint, tmp_path):
 
     fg_path.touch()  # Create empty file
 
-    with patch.object(browserforge, "_get_all_existing_fingerprints", return_value=[]):
-        with patch.object(browserforge, "__gen_fg__", return_value=mock_fingerprint):
-            with patch("pickle.dump"):
-                result = browserforge.get_fg(mock_profile)
+    with (
+        patch.object(browserforge, "_get_all_existing_fingerprints", return_value=[]),
+        patch.object(browserforge, "__gen_fg__", return_value=mock_fingerprint),
+        patch("pickle.dump"),
+    ):
+        result = browserforge.get_fg(mock_profile)
 
     assert result == mock_fingerprint
 
@@ -97,18 +99,20 @@ def test_get_fg_path_not_exists(browserforge):
 def test_gen_fg_success(browserforge, mock_fingerprint, caplog):
     caplog.set_level(logging.INFO, logger="camouchat")
     """Test __gen_fg__ generates valid fingerprint matching screen size."""
-    with patch(
-        "camouchat_browser.browserforge.BrowserForge.get_screen_size",
-        return_value=(1920, 1080),
+    with (
+        patch(
+            "camouchat_browser.browserforge.BrowserForge.get_screen_size",
+            return_value=(1920, 1080),
+        ),
+        patch("camouchat_browser.browserforge.FingerprintGenerator") as MockGen,
     ):
-        with patch("camouchat_browser.browserforge.FingerprintGenerator") as MockGen:
-            mock_gen_instance = MockGen.return_value
-            mock_gen_instance.generate.return_value = mock_fingerprint
+        mock_gen_instance = MockGen.return_value
+        mock_gen_instance.generate.return_value = mock_fingerprint
 
-            result = browserforge.__gen_fg__()
+        result = browserforge.__gen_fg__()
 
-            assert result == mock_fingerprint
-            assert "Fingerprint screen OK" in caplog.text
+        assert result == mock_fingerprint
+        assert "Fingerprint screen OK" in caplog.text
 
 
 def test_gen_fg_retries_on_mismatch(browserforge, caplog):
@@ -121,19 +125,21 @@ def test_gen_fg_retries_on_mismatch(browserforge, caplog):
     good_fg = Mock(spec=Fingerprint)
     good_fg.screen = Mock(width=1920, height=1080)
 
-    with patch(
-        "camouchat_browser.browserforge.BrowserForge.get_screen_size",
-        return_value=(1920, 1080),
+    with (
+        patch(
+            "camouchat_browser.browserforge.BrowserForge.get_screen_size",
+            return_value=(1920, 1080),
+        ),
+        patch("camouchat_browser.browserforge.FingerprintGenerator") as MockGen,
     ):
-        with patch("camouchat_browser.browserforge.FingerprintGenerator") as MockGen:
-            mock_gen_instance = MockGen.return_value
-            mock_gen_instance.generate.side_effect = [bad_fg, good_fg]
+        mock_gen_instance = MockGen.return_value
+        mock_gen_instance.generate.side_effect = [bad_fg, good_fg]
 
-            result = browserforge.__gen_fg__()
+        result = browserforge.__gen_fg__()
 
-            assert result == good_fg
-            assert mock_gen_instance.generate.call_count == 2
-            assert "Invalid fingerprint screen" in caplog.text
+        assert result == good_fg
+        assert mock_gen_instance.generate.call_count == 2
+        assert "Invalid fingerprint screen" in caplog.text
 
 
 def test_gen_fg_max_attempts(browserforge, caplog):
@@ -142,29 +148,33 @@ def test_gen_fg_max_attempts(browserforge, caplog):
     bad_fg = Mock(spec=Fingerprint)
     bad_fg.screen = Mock(width=800, height=600)
 
-    with patch(
-        "camouchat_browser.browserforge.BrowserForge.get_screen_size",
-        return_value=(1920, 1080),
+    with (
+        patch(
+            "camouchat_browser.browserforge.BrowserForge.get_screen_size",
+            return_value=(1920, 1080),
+        ),
+        patch("camouchat_browser.browserforge.FingerprintGenerator") as MockGen,
     ):
-        with patch("camouchat_browser.browserforge.FingerprintGenerator") as MockGen:
-            mock_gen_instance = MockGen.return_value
-            mock_gen_instance.generate.return_value = bad_fg
+        mock_gen_instance = MockGen.return_value
+        mock_gen_instance.generate.return_value = bad_fg
 
-            result = browserforge.__gen_fg__()
+        result = browserforge.__gen_fg__()
 
-            assert result == bad_fg
-            assert mock_gen_instance.generate.call_count == 10
-            assert "after 10 attempts" in caplog.text
+        assert result == bad_fg
+        assert mock_gen_instance.generate.call_count == 10
+        assert "after 10 attempts" in caplog.text
 
 
 def test_gen_fg_invalid_screen_size(browserforge):
     """Test __gen_fg__ raises error for invalid screen dimensions."""
-    with patch(
-        "camouchat_browser.browserforge.BrowserForge.get_screen_size",
-        return_value=(0, 0),
+    with (
+        patch(
+            "camouchat_browser.browserforge.BrowserForge.get_screen_size",
+            return_value=(0, 0),
+        ),
+        pytest.raises(BrowserException, match="Invalid real screen dimensions"),
     ):
-        with pytest.raises(BrowserException, match="Invalid real screen dimensions"):
-            browserforge.__gen_fg__()
+        browserforge.__gen_fg__()
 
 
 # ============================================================================

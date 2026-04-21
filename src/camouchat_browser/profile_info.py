@@ -1,6 +1,6 @@
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Optional, Dict, Any
+from typing import Any
 
 from camouchat_core import Platform
 
@@ -59,23 +59,23 @@ class ProfileInfo:
     media_documents_dir: Path
 
     # db credentials.
-    db_type: Optional[str]
-    database_path: Optional[Path]
-    username: Optional[str]
-    password: Optional[str]
-    host: Optional[str]
-    port: Optional[int]
-    database_name: Optional[str]
+    db_type: str | None
+    database_path: Path | None
+    username: str | None
+    password: str | None
+    host: str | None
+    port: int | None
+    database_name: str | None
 
     # --- Runtime state ---
     is_active: bool
-    last_active_pid: Optional[int]
+    last_active_pid: int | None
 
     # --- Security ---
-    encryption: Dict[str, Any]
+    encryption: dict[str, Any]
 
     @classmethod
-    def from_metadata(cls, metadata: Dict[str, Any]) -> "ProfileInfo":
+    def from_metadata(cls, metadata: dict[str, Any]) -> "ProfileInfo":
         """
         Construct a ProfileInfo instance from raw metadata and a directory manager.
 

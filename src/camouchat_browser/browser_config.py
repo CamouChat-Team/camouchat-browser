@@ -6,9 +6,11 @@ Pass this config to the CamouBrowser
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from typing import List, Dict, Optional, Any
-from .browser_logger import logger
+from typing import Any
+
 from camouchat_core import Platform
+
+from .browser_logger import logger
 
 
 @dataclass
@@ -21,14 +23,14 @@ class BrowserConfig:
     locale: str
     enable_cache: bool
     headless: bool
-    fingerprint: Optional[Any] = None
+    fingerprint: Any | None = None
     geoip: bool = False
-    proxy: Optional[Dict[str, str]] = None
-    prefs: Optional[Dict[str, bool]] = None
-    addons: List[str] = field(default_factory=list)
+    proxy: dict[str, str] | None = None
+    prefs: dict[str, bool] | None = None
+    addons: list[str] = field(default_factory=list)
 
     @classmethod
-    def from_dict(cls, data: Dict) -> BrowserConfig:
+    def from_dict(cls, data: dict) -> BrowserConfig:
         """
         Creates a BrowserConfig instance from a dictionary.
 
@@ -157,7 +159,7 @@ class BrowserConfig:
 
         geoip = data.get("geoip")
         if geoip is None:
-            geoip = True if proxy else False
+            geoip = bool(proxy)
             logger.debug(f"No geoip provided, using auto geoip: {geoip}")
 
         return cls(
@@ -196,7 +198,7 @@ class BrowserConfig:
             f")"
         )
 
-    def to_dict(self) -> Dict:
+    def to_dict(self) -> dict:
         """
         Serializes BrowserConfig to a dictionary.
         """

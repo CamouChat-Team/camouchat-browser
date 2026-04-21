@@ -1,5 +1,6 @@
-from camouchat_browser.profile_manager import ProfileManager
 from camouchat_core import Platform
+
+from camouchat_browser.profile_manager import ProfileManager
 
 
 def test_profile_manager_manual():

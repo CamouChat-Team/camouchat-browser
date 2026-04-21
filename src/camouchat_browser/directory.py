@@ -1,7 +1,7 @@
 from pathlib import Path
 
 from platformdirs import PlatformDirs
-from typing import Optional
+
 from .browser_logger import get_profile_browser_logger, logger
 
 
@@ -59,7 +59,7 @@ class DirectoryManager:
         """Returns the base directory for a specific profile on a platform."""
         return self.get_platform_dir(platform) / profile_id
 
-    def get_database_path(self, platform: str, profile_id: str, name: Optional[str] = None) -> Path:
+    def get_database_path(self, platform: str, profile_id: str, name: str | None = None) -> Path:
         """Returns the path to the database file for a profile.
         Name defaults to None — caller (e.g. SQLAlchemy storage) sets the filename.
         """

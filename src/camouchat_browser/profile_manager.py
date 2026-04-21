@@ -7,14 +7,16 @@ profiles, ensuring session isolation and secure storage of encryption keys.
 
 from __future__ import annotations
 
+import asyncio
+import contextlib
 import json
 import os
 import shutil
 import signal
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from logging import Logger, LoggerAdapter
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Union
+from typing import Any
 
 from camouchat_core import KeyManager, Platform
 
@@ -37,7 +39,7 @@ class ProfileManager:
 
     p_count: int = 0
 
-    def __init__(self, log: Optional[Union[LoggerAdapter, Logger]] = None) -> None:
+    def __init__(self, log: LoggerAdapter | Logger | None = None) -> None:
         self.directory = DirectoryManager()
         self.log = log or logger
 
@@ -46,8 +48,11 @@ class ProfileManager:
     # ------------------------------------------------------------------
 
     def _generate_metadata(
-        self, platform: Platform, profile_id: str, db_credentials: Dict[str, Any] = {}
-    ) -> Dict[str, Any]:
+        self,
+        platform: Platform,
+        profile_id: str,
+        db_credentials: dict[str, Any] | None = None,
+    ) -> dict[str, Any]:
         """
         Generates metadata for a new profile.
 
@@ -59,7 +64,7 @@ class ProfileManager:
         Returns:
             A dictionary containing the metadata for the profile.
         """
-        now = datetime.now(timezone.utc).isoformat()
+        now = datetime.now(UTC).isoformat()
 
         profile_dir = self.directory.get_profile_dir(platform, profile_id)
         fingerprint_file_path = self.directory.get_fingerprint_file_path(platform, profile_id)
@@ -71,7 +76,7 @@ class ProfileManager:
         media_documents_dir = self.directory.get_media_documents_dir(platform, profile_id)
         key_file_path = self.directory.get_key_file_path(platform, profile_id)
 
-        encryption: Dict[str, Any] = {
+        encryption: dict[str, Any] = {
             "enabled": False,
             "algorithm": "AES-256-GCM",
             "key_file": str(key_file_path),
@@ -85,7 +90,7 @@ class ProfileManager:
             "version": "0.6",
             "created_at": now,
             "last_used": now,
-            "database": db_credentials,
+            "database": db_credentials or {},
             "paths": {
                 "profile_dir": str(profile_dir),
                 "fingerprint_file": str(fingerprint_file_path),
@@ -104,7 +109,7 @@ class ProfileManager:
             },
         }
 
-    def _read_metadata(self, platform: Platform, profile_id: str) -> Dict[str, Any]:
+    def _read_metadata(self, platform: Platform, profile_id: str) -> dict[str, Any]:
         profile_dir = self.directory.get_profile_dir(platform, profile_id)
         metadata_file = profile_dir / "metadata.json"
         if not metadata_file.exists():
@@ -112,7 +117,7 @@ class ProfileManager:
         with open(metadata_file) as f:
             return json.load(f)
 
-    def _write_metadata(self, platform: Platform, profile_id: str, data: Dict[str, Any]) -> None:
+    def _write_metadata(self, platform: Platform, profile_id: str, data: dict[str, Any]) -> None:
         profile_dir = self.directory.get_profile_dir(platform, profile_id)
         with open(profile_dir / "metadata.json", "w") as f:
             json.dump(data, f, indent=4)
@@ -135,7 +140,10 @@ class ProfileManager:
     # ------------------------------------------------------------------
 
     def create_profile(
-        self, platform: Platform, profile_id: str, db_credentials: Dict[str, Any] = {}
+        self,
+        platform: Platform,
+        profile_id: str,
+        db_credentials: dict[str, Any] | None = None,
     ) -> ProfileInfo:
         """
         Create a new profile; returns the existing one if already present.
@@ -200,14 +208,14 @@ class ProfileManager:
         profile_path = platform_dir / profile_id
         return profile_path.exists() and profile_path.is_dir()
 
-    def list_profiles(self, platform: Optional[Platform] = None) -> Dict[str, List[str]]:
+    def list_profiles(self, platform: Platform | None = None) -> dict[str, list[str]]:
         """
         List profiles.
 
         - If platform is provided → returns {platform: [profile_ids]}
         - If not provided → returns {platform1: [...], platform2: [...], ...}
         """
-        results: Dict[str, List[str]] = {}
+        results: dict[str, list[str]] = {}
 
         if platform:
             platform_dir = self.directory.get_platform_dir(platform)
@@ -256,14 +264,12 @@ class ProfileManager:
         # Write key file with strict permissions (owner read-only)
         key_file: Path = self.directory.get_key_file_path(platform, profile_id)
         key_file.write_text(encoded_key, encoding="utf-8")
-        try:
+        with contextlib.suppress(OSError):
             os.chmod(key_file, 0o600)  # -rw------- on Linux/macOS
-        except OSError:
-            pass  # Windows: chmod is a no-op, skip silently
 
         # Update metadata encryption block — NO key material stored here
         metadata["encryption"]["enabled"] = True
-        metadata["encryption"]["created_at"] = datetime.now(timezone.utc).isoformat()
+        metadata["encryption"]["created_at"] = datetime.now(UTC).isoformat()
         self._write_metadata(platform, profile_id, metadata)
         self.log.info(
             f"Encryption enabled for profile : [{profile_id}] , platform : [{platform}] , stored at [{key_file}]"
@@ -380,8 +386,7 @@ class ProfileManager:
         if not metadata_file.exists():
             raise ValueError("Profile metadata not found.")
 
-        with open(metadata_file) as f:
-            data = json.load(f)
+        data = await asyncio.to_thread(self._read_metadata, platform, profile_id)
 
         if not data["status"]["is_active"]:
             return
@@ -393,10 +398,8 @@ class ProfileManager:
 
             if not closed:
                 if force and ProfileManager.is_pid_alive(pid):
-                    try:
+                    with contextlib.suppress(ProcessLookupError):
                         os.kill(pid, signal.SIGTERM)
-                    except ProcessLookupError:
-                        pass
                 elif ProfileManager.is_pid_alive(pid):
                     raise RuntimeError(
                         f"Browser process {pid} still running. Use force=True to terminate."
@@ -405,8 +408,7 @@ class ProfileManager:
         data["status"]["is_active"] = False
         data["status"]["last_active_pid"] = None
 
-        with open(metadata_file, "w") as f:
-            json.dump(data, f, indent=4)
+        await asyncio.to_thread(self._write_metadata, platform, profile_id, data)
 
         if lock_file.exists():
             lock_file.unlink()
@@ -458,7 +460,7 @@ class ProfileManager:
 
         metadata["status"]["is_active"] = True
         metadata["status"]["last_active_pid"] = os.getpid()
-        metadata["last_used"] = datetime.now(timezone.utc).isoformat()
+        metadata["last_used"] = datetime.now(UTC).isoformat()
 
         with open(metadata_file, "w") as f:
             json.dump(metadata, f, indent=4)

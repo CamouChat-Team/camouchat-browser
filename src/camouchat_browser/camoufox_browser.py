@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import os
 from logging import Logger, LoggerAdapter
-from typing import Dict, Optional, Union, cast, Any
+from typing import Any, cast
 
 import camoufox
 from browserforge.fingerprints import Fingerprint
@@ -34,13 +34,13 @@ class CamoufoxBrowser:
     """
 
     # handles Multiple Profiles to multi browser context handling
-    Map: Dict[str, BrowserContext] = {}
+    Map: dict[str, BrowserContext] = {}
 
     def __init__(
         self,
         config: BrowserConfig,
         profile: ProfileInfo,
-        log: Optional[Union[Logger, LoggerAdapter]] = None,
+        log: Logger | LoggerAdapter | None = None,
     ) -> None:
         """
         Initializes the Camoufox browser manager.
@@ -57,7 +57,7 @@ class CamoufoxBrowser:
         self.config = config
         self.profile = profile
         self.BrowserForge = BrowserForge()
-        self.browser: Optional[BrowserContext] = None
+        self.browser: BrowserContext | None = None
 
         if not self.config.headless:
             self.log.info(
@@ -101,7 +101,7 @@ class CamoufoxBrowser:
 
         if self.config.fingerprint is not None:
             obj = self.config.fingerprint
-            if isinstance(obj, Fingerprint) or isinstance(obj, dict):
+            if isinstance(obj, (Fingerprint, dict)):
                 fg = cast(Any, obj)
             else:
                 self.log.warning(
