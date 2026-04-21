@@ -2,6 +2,18 @@
 
 A high-performance, stealth-oriented browser orchestration layer designed for the CamouChat ecosystem. Built on top of [Camoufox](https://camoufox.com/), it provides advanced anti-detection capabilities, hardware-level fingerprint spoofing, and robust session management.
 
+<p align="center">
+  <a href="https://pypi.org/project/camouchat-browser/">
+      <img src="https://img.shields.io/pypi/v/camouchat-browser?label=camouchat-browser&color=green" />
+  </a>
+  <a href="https://pepy.tech/projects/camouchat-browser">
+      <img src="https://static.pepy.tech/personalized-badge/camouchat-browser?period=total&units=INTERNATIONAL_SYSTEM&left_color=BLACK&right_color=GREEN&left_text=downloads" alt="PyPI Downloads" />
+  </a>
+  <a href="https://opensource.org/licenses/MIT">
+      <img src="https://img.shields.io/badge/License-MIT-yellow.svg" />
+  </a>
+</p>
+
 ## Key Features
 
 - **Advanced Stealth**: Powered by [Camoufox](https://camoufox.com/) for industry-leading anti-bot bypass.
