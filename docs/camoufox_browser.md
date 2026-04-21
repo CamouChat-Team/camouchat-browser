@@ -29,10 +29,11 @@ await page.goto("https://google.com")
 ```
 
 ### Lifecycle Management
-The manager tracks browser PIDs globally. You can close a specific browser instance using its PID:
+
+The manager tracks active browser contexts globally via `CamoufoxBrowser.Map`. You can close a specific browser instance by its profile ID:
 
 ```python
-await CamoufoxBrowser.close_browser_by_pid(pid)
+await CamoufoxBrowser.close_browser_by_profile(profile_id)
 ```
 
 ## Anti-Detection Settings
