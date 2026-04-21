@@ -80,7 +80,6 @@ def test_gen_fg_avoids_duplicates(browserforge, caplog):
 
 
 def test_get_fg_integration(browserforge, tmp_path):
-
     fg_path = tmp_path / "fingerprint.pkl"
     fg_path.touch()
 
