@@ -4,7 +4,7 @@ A high-performance, stealth-oriented browser orchestration layer designed for th
 
 <p align="center">
   <a href="https://pypi.org/project/camouchat-browser/">
-      <img src="https://img.shields.io/pypi/v/camouchat-browser?label=camouchat-browser&color=green" />
+      <img src="https://img.shields.io/badge/PyPI-camouchat--browser-green" alt="PyPI" />
   </a>
   <a href="https://pepy.tech/projects/camouchat-browser">
       <img src="https://static.pepy.tech/personalized-badge/camouchat-browser?period=total&units=INTERNATIONAL_SYSTEM&left_color=BLACK&right_color=GREEN&left_text=downloads" alt="PyPI Downloads" />
