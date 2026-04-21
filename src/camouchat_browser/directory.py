@@ -65,7 +65,7 @@ class DirectoryManager:
         """
         path = self.get_profile_dir(platform, profile_id) / (name or "messages.db")
         path.touch(exist_ok=True)
-        return
+        return path
 
     def get_fingerprint_file_path(self, platform: str, profile_id: str) -> Path:
         """Returns the path to the fingerprint file for a profile."""
