@@ -30,7 +30,7 @@ jobs:
 
       - name: Inject Git Sources for Standalone Build
         run: |
-          uv add --git https://github.com/CamouChat-Team/camouchat-core --branch dev camouchat-core
+          uv add "camouchat-core @ git+https://github.com/CamouChat-Team/camouchat-core@dev"
 
       - name: Install Dependencies
         run: uv sync --all-extras --dev

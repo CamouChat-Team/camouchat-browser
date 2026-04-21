@@ -32,7 +32,7 @@ jobs:
 
       - name: Inject Git Sources for Build
         run: |
-          uv add --git https://github.com/CamouChat-Team/camouchat-core --branch main camouchat-core
+          uv add "camouchat-core @ git+https://github.com/CamouChat-Team/camouchat-core@main"
 
       - name: Build distributions
         run: uv build --package camouchat-browser
