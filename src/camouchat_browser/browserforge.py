@@ -104,10 +104,7 @@ class BrowserForge:
             w, h = fg.screen.width, fg.screen.height
             attempt += 1
 
-            if (
-                abs(w - real_w) / real_w < tolerance
-                and abs(h - real_h) / real_h < tolerance
-            ):
+            if abs(w - real_w) / real_w < tolerance and abs(h - real_h) / real_h < tolerance:
                 if fg in avoid:
                     if self.log:
                         self.log.debug(
@@ -127,9 +124,7 @@ class BrowserForge:
 
             if attempt >= 10:
                 if self.log:
-                    self.log.warning(
-                        "⚠️ Using last generated fingerprint after 10 attempts"
-                    )
+                    self.log.warning("⚠️ Using last generated fingerprint after 10 attempts")
                 break
 
         return fg
@@ -165,9 +160,7 @@ class BrowserForge:
             try:
                 import subprocess
 
-                out = subprocess.check_output(
-                    ["xdpyinfo"], stderr=subprocess.DEVNULL
-                ).decode()
+                out = subprocess.check_output(["xdpyinfo"], stderr=subprocess.DEVNULL).decode()
 
                 for line in out.splitlines():
                     if "dimensions:" in line:
@@ -194,9 +187,7 @@ class BrowserForge:
 
         # ---------------- Unsupported OS ----------------
         else:
-            raise BrowserException(
-                f"Unsupported OS for screen size detection: {system}"
-            )
+            raise BrowserException(f"Unsupported OS for screen size detection: {system}")
 
     @staticmethod
     def get_fingerprint_as_dict(profile: ProfileInfo) -> dict:

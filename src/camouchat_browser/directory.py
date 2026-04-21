@@ -39,24 +39,14 @@ class DirectoryManager:
         self.get_cache_dir(platform, profile_id).mkdir(parents=True, exist_ok=True)
         self.get_backup_dir(platform, profile_id).mkdir(parents=True, exist_ok=True)
         self.get_media_dir(platform, profile_id).mkdir(parents=True, exist_ok=True)
-        self.get_media_images_dir(platform, profile_id).mkdir(
-            parents=True, exist_ok=True
-        )
-        self.get_media_videos_dir(platform, profile_id).mkdir(
-            parents=True, exist_ok=True
-        )
-        self.get_media_voice_dir(platform, profile_id).mkdir(
-            parents=True, exist_ok=True
-        )
-        self.get_media_documents_dir(platform, profile_id).mkdir(
-            parents=True, exist_ok=True
-        )
+        self.get_media_images_dir(platform, profile_id).mkdir(parents=True, exist_ok=True)
+        self.get_media_videos_dir(platform, profile_id).mkdir(parents=True, exist_ok=True)
+        self.get_media_voice_dir(platform, profile_id).mkdir(parents=True, exist_ok=True)
+        self.get_media_documents_dir(platform, profile_id).mkdir(parents=True, exist_ok=True)
 
         self.get_fingerprint_file_path(platform, profile_id).touch(exist_ok=True)
         self.get_key_file_path(platform, profile_id).touch(exist_ok=True)
-        p_log = get_profile_browser_logger(
-            name="DirectoryManager", profile_id=profile_id
-        )
+        p_log = get_profile_browser_logger(name="DirectoryManager", profile_id=profile_id)
         p_log.info(
             f"Initialized directory structure for profile '{profile_id}' on platform '{platform}'"
         )
@@ -69,9 +59,7 @@ class DirectoryManager:
         """Returns the base directory for a specific profile on a platform."""
         return self.get_platform_dir(platform) / profile_id
 
-    def get_database_path(
-        self, platform: str, profile_id: str, name: Optional[str] = None
-    ) -> Path:
+    def get_database_path(self, platform: str, profile_id: str, name: Optional[str] = None) -> Path:
         """Returns the path to the database file for a profile.
         Name defaults to None — caller (e.g. SQLAlchemy storage) sets the filename.
         """

@@ -137,12 +137,8 @@ async def test_getInstance_creates_browser(camoufox_browser, mock_browserforge):
     mock_camoufox = AsyncMock()
     mock_camoufox.__aenter__.return_value = mock_context
 
-    with patch(
-        "camouchat_browser.camoufox_browser.AsyncCamoufox", return_value=mock_camoufox
-    ):
-        with patch(
-            "camouchat_browser.camoufox_browser.launch_options", return_value={}
-        ):
+    with patch("camouchat_browser.camoufox_browser.AsyncCamoufox", return_value=mock_camoufox):
+        with patch("camouchat_browser.camoufox_browser.launch_options", return_value={}):
             with patch.object(camoufox_browser.BrowserForge, "get_fg") as mock_get_fg:
                 result = await camoufox_browser.get_instance()
 
@@ -178,12 +174,8 @@ async def test_GetBrowser_success(camoufox_browser, mock_browserforge):
     mock_camoufox = AsyncMock()
     mock_camoufox.__aenter__.return_value = mock_context
 
-    with patch(
-        "camouchat_browser.camoufox_browser.AsyncCamoufox", return_value=mock_camoufox
-    ):
-        with patch(
-            "camouchat_browser.camoufox_browser.launch_options", return_value={}
-        ):
+    with patch("camouchat_browser.camoufox_browser.AsyncCamoufox", return_value=mock_camoufox):
+        with patch("camouchat_browser.camoufox_browser.launch_options", return_value={}):
             with patch.object(camoufox_browser.BrowserForge, "get_fg") as mock_get_fg:
                 result = await camoufox_browser.__GetBrowser__()
 
@@ -192,9 +184,7 @@ async def test_GetBrowser_success(camoufox_browser, mock_browserforge):
 
 
 @pytest.mark.asyncio
-async def test_GetBrowser_retries_on_invalid_ip(
-    camoufox_browser, mock_browserforge, mock_logger
-):
+async def test_GetBrowser_retries_on_invalid_ip(camoufox_browser, mock_browserforge, mock_logger):
     """Test __GetBrowser__ retries on Camoufox InvalidIP error."""
     mock_context = AsyncMock(spec=BrowserContext)
     mock_fingerprint = Mock()
@@ -215,12 +205,8 @@ async def test_GetBrowser_retries_on_invalid_ip(
     mock_camoufox = AsyncMock()
     mock_camoufox.__aenter__ = mock_aenter
 
-    with patch(
-        "camouchat_browser.camoufox_browser.AsyncCamoufox", return_value=mock_camoufox
-    ):
-        with patch(
-            "camouchat_browser.camoufox_browser.launch_options", return_value={}
-        ):
+    with patch("camouchat_browser.camoufox_browser.AsyncCamoufox", return_value=mock_camoufox):
+        with patch("camouchat_browser.camoufox_browser.launch_options", return_value={}):
             result = await camoufox_browser.__GetBrowser__()
 
             assert result == mock_context
@@ -241,12 +227,8 @@ async def test_GetBrowser_max_retries(camoufox_browser, mock_browserforge):
     mock_camoufox = AsyncMock()
     mock_camoufox.__aenter__ = mock_aenter
 
-    with patch(
-        "camouchat_browser.camoufox_browser.AsyncCamoufox", return_value=mock_camoufox
-    ):
-        with patch(
-            "camouchat_browser.camoufox_browser.launch_options", return_value={}
-        ):
+    with patch("camouchat_browser.camoufox_browser.AsyncCamoufox", return_value=mock_camoufox):
+        with patch("camouchat_browser.camoufox_browser.launch_options", return_value={}):
             with pytest.raises(BrowserException, match="Max Camoufox IP retry"):
                 await camoufox_browser.__GetBrowser__(tries=5)
 
@@ -260,9 +242,7 @@ async def test_GetBrowser_other_exception(camoufox_browser, mock_browserforge):
         "camouchat_browser.camoufox_browser.AsyncCamoufox",
         side_effect=Exception("Unknown error"),
     ):
-        with patch(
-            "camouchat_browser.camoufox_browser.launch_options", return_value={}
-        ):
+        with patch("camouchat_browser.camoufox_browser.launch_options", return_value={}):
             with pytest.raises(BrowserException, match="Failed to launch Camoufox"):
                 await camoufox_browser.__GetBrowser__()
 

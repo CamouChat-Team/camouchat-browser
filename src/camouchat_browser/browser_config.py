@@ -86,15 +86,11 @@ class BrowserConfig:
                 - if proxy format is incorrect
         """
         if not data:
-            raise ValueError(
-                "'data : dict' is required for creating BrowserConfig instance"
-            )
+            raise ValueError("'data : dict' is required for creating BrowserConfig instance")
 
         platform = data.get("platform")
         if not platform:
-            raise ValueError(
-                "'platform' is required for creating BrowserConfig instance"
-            )
+            raise ValueError("'platform' is required for creating BrowserConfig instance")
 
         if not isinstance(platform, Platform):
             raise ValueError("'platform' must be an instance of Platform")

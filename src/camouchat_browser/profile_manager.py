@@ -62,17 +62,13 @@ class ProfileManager:
         now = datetime.now(timezone.utc).isoformat()
 
         profile_dir = self.directory.get_profile_dir(platform, profile_id)
-        fingerprint_file_path = self.directory.get_fingerprint_file_path(
-            platform, profile_id
-        )
+        fingerprint_file_path = self.directory.get_fingerprint_file_path(platform, profile_id)
         cache_dir = self.directory.get_cache_dir(platform, profile_id)
         media_dir = self.directory.get_media_dir(platform, profile_id)
         media_images_dir = self.directory.get_media_images_dir(platform, profile_id)
         media_videos_dir = self.directory.get_media_videos_dir(platform, profile_id)
         media_voice_dir = self.directory.get_media_voice_dir(platform, profile_id)
-        media_documents_dir = self.directory.get_media_documents_dir(
-            platform, profile_id
-        )
+        media_documents_dir = self.directory.get_media_documents_dir(platform, profile_id)
         key_file_path = self.directory.get_key_file_path(platform, profile_id)
 
         encryption: Dict[str, Any] = {
@@ -81,9 +77,7 @@ class ProfileManager:
             "key_file": str(key_file_path),
             "created_at": None,
         }
-        self.log.debug(
-            f"Generated metadata for profile [{profile_id}] on platform [{platform}]"
-        )
+        self.log.debug(f"Generated metadata for profile [{profile_id}] on platform [{platform}]")
 
         return {
             "profile_id": profile_id,
@@ -114,15 +108,11 @@ class ProfileManager:
         profile_dir = self.directory.get_profile_dir(platform, profile_id)
         metadata_file = profile_dir / "metadata.json"
         if not metadata_file.exists():
-            raise ValueError(
-                f"Profile metadata not found for '{profile_id}' on '{platform}'."
-            )
+            raise ValueError(f"Profile metadata not found for '{profile_id}' on '{platform}'.")
         with open(metadata_file) as f:
             return json.load(f)
 
-    def _write_metadata(
-        self, platform: Platform, profile_id: str, data: Dict[str, Any]
-    ) -> None:
+    def _write_metadata(self, platform: Platform, profile_id: str, data: Dict[str, Any]) -> None:
         profile_dir = self.directory.get_profile_dir(platform, profile_id)
         with open(profile_dir / "metadata.json", "w") as f:
             json.dump(data, f, indent=4)
@@ -192,9 +182,7 @@ class ProfileManager:
         )
         self._write_metadata(platform, profile_id, metadata)
 
-        p_log.info(
-            f"Profile created with name [{profile_id}] & stored at [{profile_dir}]"
-        )
+        p_log.info(f"Profile created with name [{profile_id}] & stored at [{profile_dir}]")
         return ProfileInfo.from_metadata(metadata)
 
     def get_profile(self, platform: Platform, profile_id: str) -> ProfileInfo:
@@ -212,9 +200,7 @@ class ProfileManager:
         profile_path = platform_dir / profile_id
         return profile_path.exists() and profile_path.is_dir()
 
-    def list_profiles(
-        self, platform: Optional[Platform] = None
-    ) -> Dict[str, List[str]]:
+    def list_profiles(self, platform: Optional[Platform] = None) -> Dict[str, List[str]]:
         """
         List profiles.
 
@@ -226,9 +212,7 @@ class ProfileManager:
         if platform:
             platform_dir = self.directory.get_platform_dir(platform)
             if platform_dir.exists():
-                results[platform] = [
-                    p.name for p in platform_dir.iterdir() if p.is_dir()
-                ]
+                results[platform] = [p.name for p in platform_dir.iterdir() if p.is_dir()]
         else:
             for plat in self.directory.platforms_dir.iterdir():
                 if plat.is_dir():
@@ -361,9 +345,7 @@ class ProfileManager:
 
         # Use profile-specific browser logger
         p_log = get_profile_browser_logger(name="ProfileManager", profile_id=profile_id)
-        p_log.warning(
-            f"Encryption disabled for profile [{profile_id}] & Key Destroyed."
-        )
+        p_log.warning(f"Encryption disabled for profile [{profile_id}] & Key Destroyed.")
 
     # ------------------------------------------------------------------
     # Profile activation / deactivation
@@ -444,9 +426,7 @@ class ProfileManager:
         profile_dir = self.directory.get_profile_dir(platform, profile_id)
 
         if not profile_dir.exists():
-            raise ValueError(
-                f"Profile '{profile_id}' does not exist for platform '{platform}'."
-            )
+            raise ValueError(f"Profile '{profile_id}' does not exist for platform '{platform}'.")
 
         metadata_file = profile_dir / "metadata.json"
 
@@ -505,9 +485,7 @@ class ProfileManager:
         profile_dir = self.directory.get_profile_dir(platform, profile_id)
 
         if not profile_dir.exists():
-            raise ValueError(
-                f"Profile '{profile_id}' does not exist for platform '{platform}'."
-            )
+            raise ValueError(f"Profile '{profile_id}' does not exist for platform '{platform}'.")
 
         metadata_file = profile_dir / "metadata.json"
 
