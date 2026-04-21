@@ -1,6 +1,6 @@
 [project]
 name = "camouchat-browser"
-version = "0.7.0"
+version = "0.7.1"
 description = "Plugin for CamouChat providing anti-detection browser management via Camoufox and Playwright."
 readme = "README.md"
 authors = [
