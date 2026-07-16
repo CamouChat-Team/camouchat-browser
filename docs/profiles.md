@@ -71,12 +71,12 @@ A fully-populated dataclass snapshot of a profile's state, constructed via `Prof
 
 | Field | Type | Description |
 |---|---|---|
-| `encryption` | `dict` | Raw encryption config dict from `metadata.json`. Contains `is_encrypted` flag and key metadata. |
+| `encryption` | `dict` | Raw encryption config dict from `metadata.json`. Contains `enabled` (bool) flag and `created_at` timestamp. |
 
 
 ### `DirectoryManager`
 
-Internal utility that resolves consistent, OS-aware paths using `platformdirs`. Exposes `create_directories()` to initialise all subdirectories for a profile in a single call.
+Internal utility that resolves consistent, OS-aware paths using `platformdirs`. Exposes `setup_profile_directories(platform, profile_id)` to initialise all subdirectories for a profile in a single call.
 
 ## Encryption Management
 
