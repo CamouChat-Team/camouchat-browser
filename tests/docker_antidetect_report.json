@@ -1,0 +1,175 @@
+{
+  "timestamp": "2026-07-16T13:14:39Z",
+  "display": ":0",
+  "checks": [
+    {
+      "name": "Screen has non-zero dimensions",
+      "passed": true,
+      "detail": "screen=2560x1440  outer=2215x1228  inner=2215x1167",
+      "critical": true
+    },
+    {
+      "name": "Color depth is realistic (>= 24-bit)",
+      "passed": true,
+      "detail": "colorDepth=24",
+      "critical": true
+    },
+    {
+      "name": "devicePixelRatio is plausible (>= 1)",
+      "passed": true,
+      "detail": "devicePixelRatio=1",
+      "critical": true
+    },
+    {
+      "name": "Document is visible (visibilityState=visible)",
+      "passed": true,
+      "detail": "visibilityState=visible",
+      "critical": true
+    },
+    {
+      "name": "Document has focus",
+      "passed": true,
+      "detail": "hasFocus=True means the virtual display gave the window focus",
+      "critical": true
+    },
+    {
+      "name": "Window chrome present (outerW >= innerW)",
+      "passed": true,
+      "detail": "outerW=2215 innerW=2215",
+      "critical": false
+    },
+    {
+      "name": "$DISPLAY env var is set (Xvfb active)",
+      "passed": true,
+      "detail": "DISPLAY=':0'",
+      "critical": true
+    },
+    {
+      "name": "navigator.webdriver is false",
+      "passed": true,
+      "detail": "webdriver=False",
+      "critical": true
+    },
+    {
+      "name": "No Selenium / WebDriver globals",
+      "passed": true,
+      "detail": "domAutomation=False selenium=False",
+      "critical": true
+    },
+    {
+      "name": "No Puppeteer / Playwright globals",
+      "passed": true,
+      "detail": "puppeteerGlobal=False",
+      "critical": true
+    },
+    {
+      "name": "No CDP injection globals (cdc_*)",
+      "passed": true,
+      "detail": "window has no cdc_* keys",
+      "critical": true
+    },
+    {
+      "name": "No Nightmare.js globals",
+      "passed": true,
+      "detail": "nightmare=False",
+      "critical": true
+    },
+    {
+      "name": "Plugins list is non-empty (>= 1 plugin)",
+      "passed": true,
+      "detail": "plugins=5  mimeTypes=2",
+      "critical": true
+    },
+    {
+      "name": "navigator.languages is non-empty",
+      "passed": true,
+      "detail": "languages=['en-US', 'en']",
+      "critical": true
+    },
+    {
+      "name": "Canvas fingerprint is non-blank (pixels rendered)",
+      "passed": true,
+      "detail": "dataURL len=8814  blank=False",
+      "critical": true
+    },
+    {
+      "name": "WebGL renderer is not a software rasterizer",
+      "passed": true,
+      "detail": "vendor='Google Inc. (NVIDIA)'  renderer='ANGLE (NVIDIA, NVIDIA GeForce GTX 980 Direct3D11 vs_5_0 ps_5_0), or similar'",
+      "critical": true
+    },
+    {
+      "name": "WebGL returns a non-empty renderer string",
+      "passed": true,
+      "detail": "renderer='ANGLE (NVIDIA, NVIDIA GeForce GTX 980 Direct3D11 vs_5_0 ps_5_0), or similar'",
+      "critical": true
+    },
+    {
+      "name": "AudioContext is functional",
+      "passed": true,
+      "detail": "sampleRate=44100  state=suspended  err=None",
+      "critical": true
+    },
+    {
+      "name": "Timezone is set (Intl API works)",
+      "passed": true,
+      "detail": "timeZone='UTC'",
+      "critical": true
+    },
+    {
+      "name": "Platform is not bare 'Linux x86_64' (spoofed)",
+      "passed": true,
+      "detail": "navigator.platform='Win32'",
+      "critical": false
+    },
+    {
+      "name": "Outbound internet is reachable (egress IP resolved)",
+      "passed": true,
+      "detail": "egress_ip='125.20.160.2'",
+      "critical": true
+    },
+    {
+      "name": "User-Agent contains Firefox (not HeadlessFirefox)",
+      "passed": true,
+      "detail": "User-Agent='Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:135.0) Gecko/20100101 Firefox/135.0'",
+      "critical": true
+    },
+    {
+      "name": "User-Agent does not contain 'headless'",
+      "passed": true,
+      "detail": "User-Agent='Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:135.0) Gecko/20100101 Firefox/135.0'",
+      "critical": true
+    },
+    {
+      "name": "browserleaks.com/canvas loads without crash",
+      "passed": true,
+      "detail": "title='Canvas Fingerprinting - BrowserLeaks'",
+      "critical": false
+    },
+    {
+      "name": "navigator.webdriver is false on external page",
+      "passed": true,
+      "detail": "webdriver=False  (tested on external domain, not about:blank)",
+      "critical": true
+    },
+    {
+      "name": "CreepJS: page loaded and ran JS fingerprinting",
+      "passed": true,
+      "detail": "page_text_len > 500: True",
+      "critical": false
+    },
+    {
+      "name": "CreepJS: no 'headless browser' or 'automated' verdict",
+      "passed": true,
+      "detail": "hasHeadless=False  hasAutomated=False  hasLies=False",
+      "critical": false
+    },
+    {
+      "name": "pixelscan.net: fingerprint not flagged as inconsistent",
+      "passed": true,
+      "detail": "inconsistent=False  highRisk=False  loaded=True",
+      "critical": false
+    }
+  ],
+  "all_critical_passed": true
+}
