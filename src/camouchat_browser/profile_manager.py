@@ -118,9 +118,13 @@ class ProfileManager:
             return json.load(f)
 
     def _write_metadata(self, platform: Platform, profile_id: str, data: dict[str, Any]) -> None:
+        """Write metadata atomically via a temp file + os.replace."""
         profile_dir = self.directory.get_profile_dir(platform, profile_id)
-        with open(profile_dir / "metadata.json", "w") as f:
+        target = profile_dir / "metadata.json"
+        tmp = target.with_suffix(".json.tmp")
+        with open(tmp, "w") as f:
             json.dump(data, f, indent=4)
+        os.replace(tmp, target)
 
     @classmethod
     def __inc__(cls):
