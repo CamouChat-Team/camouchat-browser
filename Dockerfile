@@ -19,6 +19,10 @@ ENV DEBIAN_FRONTEND=noninteractive \
     XDG_CACHE_HOME=/opt/cache \
     XDG_DATA_HOME=/opt/share \
     XDG_STATE_HOME=/opt/state \
+    # Signals to CamoufoxBrowser that it is running inside a Docker container.
+    # When set to "1", headless mode is forced to "virtual" (Xvfb) for all profiles,
+    # overriding any headless=True or headless=False the plugin may pass in.
+    CAMOUCHAT_DOCKER=1 \
     # Suppress pip upgrade nags
     PIP_NO_CACHE_DIR=1 \
     PIP_DISABLE_PIP_VERSION_CHECK=1
@@ -104,6 +108,16 @@ RUN useradd --create-home --shell /bin/bash app \
 
 USER app
 WORKDIR /home/app
+
+# ── Entrypoint ──────────────────────────────────────────────────────────────────
+# Copies the Camoufox binary from the image layer to the runtime volume on first
+# boot, then hands off to CMD. Plugin images that need their own setup should
+# COPY their entrypoint and call this one first:
+#   ENTRYPOINT ["/home/app/plugin-entrypoint.sh"]
+#   where plugin-entrypoint.sh ends with: exec /home/app/entrypoint.sh "$@"
+COPY --chown=app:app entrypoint.sh /home/app/entrypoint.sh
+RUN chmod +x /home/app/entrypoint.sh
+ENTRYPOINT ["/home/app/entrypoint.sh"]
 
 # ── Labels ──────────────────────────────────────────────────────────────────────
 LABEL org.opencontainers.image.title="camouchat-browser" \

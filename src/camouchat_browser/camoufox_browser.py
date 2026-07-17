@@ -59,9 +59,20 @@ class CamoufoxBrowser:
         self.BrowserForge = BrowserForge()
         self.browser: BrowserContext | None = None
 
-        if not self.config.headless:
+        # Inside Docker (CAMOUCHAT_DOCKER=1) force virtual display for all
+        # profiles. True bypasses Xvfb (leaking headless signals); False
+        # crashes (no physical display). "virtual" is the only safe mode.
+        if os.getenv("CAMOUCHAT_DOCKER") == "1":
+            if self.config.headless != "virtual":
+                self.log.info(
+                    "Docker mode: overriding headless=%r to 'virtual' (Xvfb).",
+                    self.config.headless,
+                )
+                self.config.headless = "virtual"
+        elif not self.config.headless:
             self.log.info(
-                "Opening Browser into visible Mode. Change headless to True for Invisible Browser."
+                "Opening Browser into visible Mode. "
+                "Change headless to True for Invisible Browser."
             )
 
     async def get_instance(self) -> BrowserContext:

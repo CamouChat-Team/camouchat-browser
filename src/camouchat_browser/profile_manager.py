@@ -458,7 +458,13 @@ class ProfileManager:
                 lock_file.unlink()
 
         if ProfileManager.__p_count__() >= 1:
-            browser.config.headless = True
+            # Docker: Xvfb is the only valid display — use "virtual", not True.
+            # Bare metal: True is correct; one physical display is already
+            # claimed by the first profile.
+            if os.getenv("CAMOUCHAT_DOCKER") == "1":
+                browser.config.headless = "virtual"
+            else:
+                browser.config.headless = True
 
         ProfileManager.__inc__()
 
