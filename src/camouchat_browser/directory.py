@@ -61,11 +61,15 @@ class DirectoryManager:
 
     def get_database_path(self, platform: str, profile_id: str, name: str | None = None) -> Path:
         """Returns the path to the database file for a profile.
-        Name defaults to None — caller (e.g. SQLAlchemy storage) sets the filename.
+
+        Does NOT create the file — the caller (e.g. SQLAlchemy) creates it on
+        first connect. Pre-touching an empty file causes SQLite to reject it as
+        not a valid database.
+
+        Name defaults to None — caller sets the filename.
         """
-        path = self.get_profile_dir(platform, profile_id) / (name or "messages.db")
-        path.touch(exist_ok=True)
-        return path
+        profile_dir = self.get_profile_dir(platform, profile_id)
+        return profile_dir / (name or "messages.db")
 
     def get_fingerprint_file_path(self, platform: str, profile_id: str) -> Path:
         """Returns the path to the fingerprint file for a profile."""

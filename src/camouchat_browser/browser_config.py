@@ -22,11 +22,11 @@ class BrowserConfig:
     platform: Platform
     locale: str
     enable_cache: bool
-    headless: bool
+    headless: bool | str
     fingerprint: Any | None = None
     geoip: bool = False
     proxy: dict[str, str] | None = None
-    prefs: dict[str, bool] | None = None
+    prefs: dict[str, bool | int | str] | None = None
     addons: list[str] = field(default_factory=list)
 
     @classmethod
@@ -51,8 +51,10 @@ class BrowserConfig:
                 Enables browser cache.
                 Default: False
 
-            headless (bool)
+            headless (bool | str)
                 Runs browser in headless mode.
+                Accepts True, False, or "virtual" (Xvfb virtual display; use
+                in Docker to avoid headless detection).
                 Default: False
 
             geoip (bool)
@@ -151,11 +153,20 @@ class BrowserConfig:
         if enable_cache is None:
             logger.debug("No enable_cache provided, using default enable_cache False")
             enable_cache = False
+        elif not isinstance(enable_cache, bool):
+            raise ValueError(
+                f"enable_cache must be a bool, "
+                f"got {type(enable_cache).__name__!r}"
+            )
 
         headless = data.get("headless")
         if headless is None:
             logger.warning("No headless provided, using default headless False")
             headless = False
+        elif headless not in (True, False, "virtual"):
+            raise ValueError(
+                f"headless must be True, False, or 'virtual', got {headless!r}"
+            )
 
         geoip = data.get("geoip")
         if geoip is None:
@@ -180,7 +191,7 @@ class BrowserConfig:
             Locale: {self.locale}
             EnableCache: {self.enable_cache}
             Headless: {self.headless}
-            Fingerprint: {self.fingerprint!r} # Need to check for the fingerprint's __repr__
+            Fingerprint: {self.fingerprint!r}
             geoip: {self.geoip}
             Proxy: {self.proxy}
             Preferences: {self.prefs}
@@ -201,6 +212,11 @@ class BrowserConfig:
     def to_dict(self) -> dict:
         """
         Serializes BrowserConfig to a dictionary.
+
+        Note: the ``fingerprint`` field is intentionally omitted from the
+        output because ``Fingerprint`` objects are not JSON-serializable.
+        Re-constructing via ``from_dict`` will regenerate the fingerprint
+        automatically through BrowserForge.
         """
         return {
             "platform": self.platform,
@@ -211,5 +227,4 @@ class BrowserConfig:
             "proxy": self.proxy,
             "prefs": self.prefs,
             "addons": self.addons,
-            "fingerprint": {"provider": "browserforge"},
         }

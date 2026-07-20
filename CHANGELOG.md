@@ -5,6 +5,32 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased] - 2026-07-16
+
+### Added
+
+- **Docker base image**: `Dockerfile`, `.dockerignore`, and `docs/docker.md` — pre-built image with Camoufox binary, Firefox system libraries, and Xvfb virtual display; designed for platform plugins to extend with `FROM camouchat-browser-base:latest`.
+- **Anti-detection smoke test** (`tests/docker_antidetect_smoke.py`): 28 checks across four groups (virtual display, automation signals, fingerprint APIs, external sites) verifying the container is clean before deployment.
+- **AGENTS.md**: AI agent instructions for any agent working in this repository (source layout, async-first rules, Docker invariants, what not to do).
+- `BrowserConfig.from_dict()` now accepts `headless="virtual"` for Xvfb virtual display mode (Docker), alongside existing `True`/`False` values.
+- `BrowserConfig.from_dict()` validates `enable_cache` is a `bool`; raises `ValueError` on wrong type.
+- `pyproject.toml` classifiers now correctly list Python 3.11, 3.12, and 3.13 (previously only 3.14 was declared despite `requires-python = ">=3.11"`).
+
+### Changed
+
+- `BrowserConfig.headless` field type broadened from `bool` to `bool | str` to accommodate `"virtual"`.
+- `BrowserConfig.prefs` field type broadened from `dict[str, bool]` to `dict[str, bool | int | str]`.
+- `BrowserConfig.to_dict()` no longer emits a `fingerprint` stub; docstring explains the intentional omission (Fingerprint objects are not JSON-serializable; `from_dict` re-generates via BrowserForge).
+- `CamoufoxBrowser.__GetBrowser__`: `AsyncCamoufox` context manager is now stored before `__aenter__` so partially-started browser subprocesses are cleaned up on `InvalidIP` retry and other launch exceptions.
+- `CamoufoxBrowser.close_browser_by_profile`: exception is now logged with full traceback before returning `False` (was silently swallowed).
+- `DirectoryManager.get_database_path`: removed `path.touch(exist_ok=True)` — SQLAlchemy creates the SQLite file on first connect; pre-touching an empty file caused `not a valid database` errors.
+- `ProfileManager._write_metadata`: now atomic — writes to a `.json.tmp` temp file then `os.replace()`s into place, preventing corrupt JSON on process kill.
+- `BrowserForge.get_fingerprint_as_dict`: fixed to use `pickle.load` (fingerprints are stored as binary pickle, not JSON); removed unused `import json`.
+- Stale developer comment removed from `BrowserConfig.__str__` f-string.
+- `docs/profiles.md`: corrected `encryption.is_encrypted` → `encryption.enabled` and `create_directories()` → `setup_profile_directories(platform, profile_id)`.
+
+---
+
 ## [0.7.1] - 2026-04-21
 
 ### Added

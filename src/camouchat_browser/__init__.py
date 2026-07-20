@@ -14,8 +14,6 @@ from .exceptions import BrowserException
 from .profile_info import ProfileInfo
 from .profile_manager import ProfileManager
 
-# Todo , adding logger later
-
 __all__ = [
     "BrowserForge",
     "BrowserConfig",

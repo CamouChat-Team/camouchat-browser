@@ -7,7 +7,6 @@ that match the host's actual display dimensions.
 """
 
 import contextlib
-import json
 import os
 import pickle
 from pathlib import Path
@@ -190,35 +189,57 @@ class BrowserForge:
     @staticmethod
     def get_fingerprint_as_dict(profile: ProfileInfo) -> dict:
         """
-        Auto-Configure path to check & return data .
-        :param profile: ProfileInfo
-        :return: dict
+        Load the stored fingerprint for a profile and return it as a plain dict.
+
+        Fingerprints are stored as pickle (binary). This method deserializes the
+        pickle and converts the Fingerprint object to a dict for inspection or
+        serialization purposes.
+
+        Args:
+            profile: ProfileInfo whose fingerprint_path points to fingerprint.pkl.
+
+        Returns:
+            dict representation of the stored Fingerprint.
+
+        Raises:
+            BrowserException: if the file is missing, empty, or cannot be loaded.
         """
         saved_fingerprint_path: Path = profile.fingerprint_path
 
         if not saved_fingerprint_path.exists():
-            raise BrowserException("saved_fingerprint_path does not exist")
+            raise BrowserException("fingerprint file does not exist")
 
         if not saved_fingerprint_path.is_file():
-            raise BrowserException("saved_fingerprint_path is not a file")
+            raise BrowserException("fingerprint path is not a file")
 
         if os.stat(saved_fingerprint_path).st_size == 0:
-            raise BrowserException("saved_fingerprint_path is empty")
+            raise BrowserException("fingerprint file is empty — not yet generated")
 
         try:
-            with open(saved_fingerprint_path, encoding="utf-8") as f:
-                data = json.load(f)
+            # pickle is acceptable here: fingerprint.pkl is written exclusively
+            # by this application (see get_fg) into the user's local XDG cache
+            # directory. It is never received from an external or untrusted source.
+            # TODO: migrate storage to JSON (Fingerprint.__dict__ is serialisable)
+            # to eliminate the pickle dependency entirely.
+            with open(saved_fingerprint_path, "rb") as f:
+                fg: Fingerprint = pickle.load(f)  # noqa: S301
 
-            if not isinstance(data, dict):
-                raise BrowserException("Fingerprint JSON is not a valid dict")
+            if not isinstance(fg, Fingerprint):
+                raise BrowserException(
+                    f"Expected Fingerprint, got {type(fg).__name__}"
+                )
 
-            return data
+            return fg.__dict__
 
-        except json.JSONDecodeError as e:
-            raise BrowserException(f"Invalid fingerprint JSON format: {e}") from e
+        except (pickle.UnpicklingError, EOFError) as e:
+            raise BrowserException(
+                f"Fingerprint file is corrupt or unreadable: {e}"
+            ) from e
 
         except Exception as e:
-            raise BrowserException(f"Failed to load fingerprint JSON: {e}") from e
+            raise BrowserException(
+                f"Failed to load fingerprint: {e}"
+            ) from e
 
     def __repr__(self):
         return f"BrowserForge(log={type(self.log).__name__})"

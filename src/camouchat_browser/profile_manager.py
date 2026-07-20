@@ -118,9 +118,13 @@ class ProfileManager:
             return json.load(f)
 
     def _write_metadata(self, platform: Platform, profile_id: str, data: dict[str, Any]) -> None:
+        """Write metadata atomically via a temp file + os.replace."""
         profile_dir = self.directory.get_profile_dir(platform, profile_id)
-        with open(profile_dir / "metadata.json", "w") as f:
+        target = profile_dir / "metadata.json"
+        tmp = target.with_suffix(".json.tmp")
+        with open(tmp, "w") as f:
             json.dump(data, f, indent=4)
+        os.replace(tmp, target)
 
     @classmethod
     def __inc__(cls):
@@ -454,7 +458,13 @@ class ProfileManager:
                 lock_file.unlink()
 
         if ProfileManager.__p_count__() >= 1:
-            browser.config.headless = True
+            # Docker: Xvfb is the only valid display — use "virtual", not True.
+            # Bare metal: True is correct; one physical display is already
+            # claimed by the first profile.
+            if os.getenv("CAMOUCHAT_DOCKER") == "1":
+                browser.config.headless = "virtual"
+            else:
+                browser.config.headless = True
 
         ProfileManager.__inc__()
 

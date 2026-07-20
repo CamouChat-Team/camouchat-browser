@@ -12,7 +12,7 @@ from camoufox.async_api import AsyncCamoufox, launch_options
 from playwright.async_api import BrowserContext, Page
 
 from .browser_config import BrowserConfig
-from .browser_logger import get_profile_browser_logger
+from .browser_logger import get_profile_browser_logger, logger
 from .browserforge import BrowserForge
 from .exceptions import BrowserException
 from .profile_info import ProfileInfo
@@ -59,9 +59,20 @@ class CamoufoxBrowser:
         self.BrowserForge = BrowserForge()
         self.browser: BrowserContext | None = None
 
-        if not self.config.headless:
+        # Inside Docker (CAMOUCHAT_DOCKER=1) force virtual display for all
+        # profiles. True bypasses Xvfb (leaking headless signals); False
+        # crashes (no physical display). "virtual" is the only safe mode.
+        if os.getenv("CAMOUCHAT_DOCKER") == "1":
+            if self.config.headless != "virtual":
+                self.log.info(
+                    "Docker mode: overriding headless=%r to 'virtual' (Xvfb).",
+                    self.config.headless,
+                )
+                self.config.headless = "virtual"
+        elif not self.config.headless:
             self.log.info(
-                "Opening Browser into visible Mode. Change headless to True for Invisible Browser."
+                "Opening Browser into visible Mode. "
+                "Change headless to True for Invisible Browser."
             )
 
     async def get_instance(self) -> BrowserContext:
@@ -113,32 +124,49 @@ class CamoufoxBrowser:
         else:
             fg = self.BrowserForge.get_fg(profile=self.profile)
 
-        try:
-            browser = await AsyncCamoufox(
-                **launch_options(
-                    locale=self.config.locale,
-                    headless=self.config.headless,
-                    humanize=True,
-                    geoip=self.config.geoip,
-                    proxy=self.config.proxy,
-                    fingerprint=fg,
-                    enable_cache=self.config.enable_cache,
-                    i_know_what_im_doing=True,
-                    firefox_user_prefs=self.config.prefs if self.config.prefs else None,
-                    main_world_eval=True,
+        cm = AsyncCamoufox(
+            **launch_options(
+                locale=self.config.locale,
+                headless=self.config.headless,
+                humanize=True,
+                geoip=self.config.geoip,
+                proxy=self.config.proxy,
+                fingerprint=fg,
+                enable_cache=self.config.enable_cache,
+                i_know_what_im_doing=True,
+                firefox_user_prefs=(
+                    self.config.prefs if self.config.prefs else None
                 ),
-                persistent_context=True,
-                user_data_dir=self.profile.cache_dir,
-            ).__aenter__()
+                main_world_eval=True,
+            ),
+            persistent_context=True,
+            user_data_dir=self.profile.cache_dir,
+        )
 
+        browser = None
+        try:
+            browser = await cm.__aenter__()
             self.browser = browser  # type: ignore[assignment]
             return self.browser  # type: ignore[return-value]
 
         except camoufox.exceptions.InvalidIP:
-            self.log.warning(f"Camoufox IP failed (attempt {tries}/5). Retrying...")
+            # Clean up the partially-started context before retrying.
+            if browser is not None:
+                try:
+                    await cm.__aexit__(None, None, None)
+                except Exception:
+                    pass
+            self.log.warning(
+                f"Camoufox IP failed (attempt {tries}/5). Retrying..."
+            )
             return await self.__GetBrowser__(tries=tries + 1)
 
         except Exception as e:
+            if browser is not None:
+                try:
+                    await cm.__aexit__(None, None, None)
+                except Exception:
+                    pass
             raise BrowserException("Failed to launch Camoufox browser") from e
 
     async def get_page(self) -> Page:
@@ -176,5 +204,11 @@ class CamoufoxBrowser:
             await browser.__aexit__(None, None, None)
             cls.Map.pop(profile_id, None)
             return True
-        except Exception:
+        except Exception as e:
+            logger.error(
+                "Failed to close browser context for profile '%s': %s",
+                profile_id,
+                e,
+                exc_info=True,
+            )
             return False
