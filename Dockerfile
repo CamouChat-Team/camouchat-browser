@@ -1,7 +1,7 @@
 # camouchat-browser — base Docker image
 #
 # Provides a ready-to-run Camoufox stealth browser inside a virtual X display.
-# Use this as the FROM base for your camouchat-panos (or any platform plugin) image.
+# Use this as the FROM base for your platform plugin image (e.g. camouchat-whatsapp).
 #
 # Build:
 #   docker build -t camouchat-browser-base:latest .
@@ -66,7 +66,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     xvfb \
     # --- Clipboard (pyperclip requires xclip + a live $DISPLAY) ---
     xclip \
-    # --- Fonts (emoji + Latin — prevents blank-page rendering on PANOS Web) ---
+    # --- Fonts (emoji + Latin — prevents blank-page rendering on platform Web apps) ---
     fonts-liberation \
     fonts-noto-color-emoji \
     # --- TLS certs ---
